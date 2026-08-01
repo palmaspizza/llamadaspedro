@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Familia - Llamar al Tata</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif; }
+  body { background:#f2f4f8; color:#1a1a2e; padding-bottom:40px; }
+
+  header {
+    background:linear-gradient(135deg,#1e3c72,#2a5298); color:#fff;
+    padding:18px 16px; text-align:center;
+  }
+  header h1 { font-size:1.3rem; }
+
+  #mapa { width:100%; height:260px; }
+  #ultimaUbicacion {
+    text-align:center; padding:8px; font-size:.85rem; color:#555; background:#e9edf5;
+  }
+
+  #selectorPerfil {
+    padding:16px; background:#fff; margin:12px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.08);
+  }
+  #selectorPerfil h2 { font-size:1rem; margin-bottom:10px; color:#333; }
+  .perfiles { display:flex; gap:10px; flex-wrap:wrap; }
+  .perfilBtn {
+    flex:1; min-width:70px; border:2px solid #dde3ee; background:#fafbfe; border-radius:14px;
+    padding:12px 6px; text-align:center; cursor:pointer; font-size:.85rem;
+  }
+  .perfilBtn .emoji { font-size:1.8rem; display:block; margin-bottom:4px; }
+  .perfilBtn.activo { border-color:#2a5298; background:#e8edfb; font-weight:700; }
+
+  #panelControl { margin:12px; }
+  .btnGrande {
+    width:100%; border:none; border-radius:18px; color:#fff; font-size:1.3rem; font-weight:800;
+    padding:26px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.15); margin-bottom:12px;
+  }
+  .btnLlamar   { background:#1fa855; }
+  .btnCancelar { background:#e63946; }
+  .btnSumarse  { background:#2266dd; }
+  .btnFinalizar{ background:#8d0801; font-size:1rem; }
+
+  #estadoTexto {
+    text-align:center; padding:16px; font-size:1.05rem; font-weight:600; color:#333;
+  }
+
+  #jitsiMovil { width:100%; height:0; overflow:hidden; border-radius:14px; margin:0 12px; transition:height .3s; }
+  #jitsiMovil.activo { height:340px; }
+
+  /* Modo GPS puro (para el celular del tata) */
+  #pantallaGPS {
+    position:fixed; inset:0; background:#1e3c72; color:#fff; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:30px;
+  }
+  #pantallaGPS h1 { font-size:1.6rem; margin-bottom:20px; }
+  #pantallaGPS p { font-size:1rem; opacity:.9; }
+  #estadoGPS { margin-top:30px; font-size:1.1rem; font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     MODO GPS (solo se muestra si la URL tiene ?gps=1)
+     Se usa en el celular del Tata para reportar su ubicación
+     ============================================================ -->
+<div id="pantallaGPS" style="display:none;">
+  <h1>📍 Ubicación del Tata</h1>
+  <p>Esta pantalla envía su ubicación a la familia automáticamente.<br>No es necesario tocar nada más.</p>
+  <div id="estadoGPS">Iniciando...</div>
+</div>
+
+<!-- ============================================================
+     APP NORMAL PARA LOS FAMILIARES
+     ============================================================ -->
+<div id="appFamilia">
+  <header>
+    <h1>👨‍👩‍👧‍👦 Familia del Tata</h1>
+  </header>
+
+  <div id="mapa"></div>
+  <div id="ultimaUbicacion">Buscando última ubicación...</div>
+
+  <div id="selectorPerfil">
+    <h2>¿Quién está llamando?</h2>
+    <div class="perfiles">
+      <div class="perfilBtn" data-nombre="Diego" data-emoji="🧑">
+        <span class="emoji">🧑</span>Diego
+      </div>
+      <div class="perfilBtn" data-nombre="Abuela" data-emoji="👵">
+        <span class="emoji">👵</span>Abuela
+      </div>
+      <div class="perfilBtn" data-nombre="Tía" data-emoji="👩">
+        <span class="emoji">👩</span>Tía
+      </div>
+      <div class="perfilBtn" data-nombre="Mamá" data-emoji="👩‍🦱">
+        <span class="emoji">👩‍🦱</span>Mamá
+      </div>
+    </div>
+  </div>
+
+  <div id="estadoTexto"></div>
+
+  <div id="panelControl"></div>
+
+  <div id="jitsiMovil"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://8x8.vc/v1/external_api.js"></script>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN DE FIREBASE
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDaarm67ndNx64YwmsEqhyEE-JI3G0zYpo",
+  authDomain: "pedrollamadas-f8e8c.firebaseapp.com",
+  databaseURL: "https://pedrollamadas-f8e8c-default-rtdb.firebaseio.com",
+  projectId: "pedrollamadas-f8e8c",
+  storageBucket: "pedrollamadas-f8e8c.firebasestorage.app",
+  messagingSenderId: "910857723610",
+  appId: "1:910857723610:web:94ba7b9c68d9c1c7d60fe3",
+  measurementId: "G-E2F40V1GZG"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const refLlamada = db.ref('llamada');
+const refUbicacion = db.ref('ubicacion');
+const NOMBRE_SALA = "FamiliaTataAlzheimer2026_SalaUnica";
+
+/* ============================================================
+   MODO GPS: si la URL es index.html?gps=1
+   (Este es el modo que se configura UNA VEZ en el celular del Tata)
+   ============================================================ */
+const parametros = new URLSearchParams(window.location.search);
+if (parametros.get('gps') === '1') {
+  document.getElementById('appFamilia').style.display = 'none';
+  document.getElementById('pantallaGPS').style.display = 'flex';
+  iniciarEnvioGPS();
+} else {
+  iniciarAppFamiliar();
+}
+
+function iniciarEnvioGPS(){
+  const estadoGPS = document.getElementById('estadoGPS');
+  if (!('geolocation' in navigator)) {
+    estadoGPS.textContent = 'Este teléfono no soporta ubicación GPS.';
+    return;
+  }
+  navigator.geolocation.watchPosition(
+    (pos) => {
+      const ahora = new Date();
+      const hora = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')} hrs`;
+      refUbicacion.set({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        ultimaActualizacion: hora
+      });
+      estadoGPS.textContent = `✅ Ubicación enviada (${hora})`;
+    },
+    (err) => {
+      estadoGPS.textContent = '⚠️ Activa el permiso de ubicación para este sitio.';
+      console.warn(err);
+    },
+    { enableHighAccuracy:true, maximumAge:15000, timeout:20000 }
+  );
+}
+
+/* ============================================================
+   APP FAMILIAR NORMAL
+   ============================================================ */
+let perfilSeleccionado = JSON.parse(localStorage.getItem('perfilFamilia') || 'null');
+let mapaLeaflet = null;
+let marcadorTata = null;
+let jitsiApiMovil = null;
+let estadoLlamadaActual = 'inactiva';
+
+function iniciarAppFamiliar(){
+  inicializarMapa();
+  escucharUbicacion();
+  configurarSelectorPerfil();
+  escucharEstadoLlamada();
+}
+
+/* ---------- MAPA ---------- */
+function inicializarMapa(){
+  mapaLeaflet = L.map('mapa').setView([-33.4372, -70.6506], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(mapaLeaflet);
+}
+
+function escucharUbicacion(){
+  refUbicacion.on('value', (snap) => {
+    const datos = snap.val();
+    if (!datos) return;
+    const { lat, lng, ultimaActualizacion } = datos;
+    if (lat == null || lng == null) return;
+
+    if (!marcadorTata) {
+      marcadorTata = L.marker([lat, lng]).addTo(mapaLeaflet)
+        .bindPopup('📍 Tata');
+    } else {
+      marcadorTata.setLatLng([lat, lng]);
+    }
+    mapaLeaflet.setView([lat, lng], mapaLeaflet.getZoom());
+    document.getElementById('ultimaUbicacion').textContent =
+      `Última actualización: ${ultimaActualizacion || '—'}`;
+  });
+}
+
+/* ---------- SELECTOR DE PERFIL ---------- */
+function configurarSelectorPerfil(){
+  const botones = document.querySelectorAll('.perfilBtn');
+  botones.forEach(btn => {
+    if (perfilSeleccionado && btn.dataset.nombre === perfilSeleccionado.nombre) {
+      btn.classList.add('activo');
+    }
+    btn.addEventListener('click', () => {
+      botones.forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      perfilSeleccionado = { nombre: btn.dataset.nombre, emoji: btn.dataset.emoji };
+      localStorage.setItem('perfilFamilia', JSON.stringify(perfilSeleccionado));
+    });
+  });
+}
+
+/* ---------- ESTADO DE LA LLAMADA / PANEL DE CONTROL ---------- */
+function escucharEstadoLlamada(){
+  refLlamada.on('value', (snap) => {
+    const datos = snap.val() || { estado:'inactiva' };
+    estadoLlamadaActual = datos.estado || 'inactiva';
+    renderizarPanel(datos);
+  });
+}
+
+function renderizarPanel(datos){
+  const panel = document.getElementById('panelControl');
+  const estadoTexto = document.getElementById('estadoTexto');
+  panel.innerHTML = '';
+
+  if (estadoLlamadaActual === 'inactiva') {
+    estadoTexto.textContent = '';
+    panel.appendChild(crearBoton('btnLlamar', '📞 LLAMAR AL TATA', llamarTata));
+    cerrarJitsiMovil();
+  }
+  else if (estadoLlamadaActual === 'llamando') {
+    estadoTexto.textContent = `Llamando al computador del tata... (${datos.llamadorNombre || ''})`;
+    panel.appendChild(crearBoton('btnCancelar', '✖ CANCELAR LLAMADA', finalizarLlamada));
+  }
+  else if (estadoLlamadaActual === 'en_llamada') {
+    estadoTexto.textContent = '🟢 El tata está en llamada actualmente';
+    panel.appendChild(crearBoton('btnSumarse', '➕ SUMARSE A LA LLAMADA GRUPAL', sumarseALlamada));
+    panel.appendChild(crearBoton('btnFinalizar', '🔴 FINALIZAR / COLGAR PARA TODOS', finalizarLlamada));
+  }
+}
+
+function crearBoton(clase, texto, accion){
+  const b = document.createElement('button');
+  b.className = `btnGrande ${clase}`;
+  b.textContent = texto;
+  b.addEventListener('click', accion);
+  return b;
+}
+
+/* ---------- ACCIONES ---------- */
+function llamarTata(){
+  if (!perfilSeleccionado) {
+    alert('Por favor elige primero quién está llamando 🙂');
+    return;
+  }
+  refLlamada.set({
+    estado: 'llamando',
+    llamadorNombre: perfilSeleccionado.nombre,
+    llamadorFoto: perfilSeleccionado.emoji
+  });
+  abrirJitsiMovil();
+}
+
+function sumarseALlamada(){
+  abrirJitsiMovil();
+}
+
+function finalizarLlamada(){
+  refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
+  cerrarJitsiMovil();
+}
+
+/* ---------- JITSI EN EL CELULAR ---------- */
+function abrirJitsiMovil(){
+  const contenedor = document.getElementById('jitsiMovil');
+  contenedor.classList.add('activo');
+  contenedor.innerHTML = '';
+
+  const options = {
+    roomName: NOMBRE_SALA,
+    parentNode: contenedor,
+    width: '100%',
+    height: '100%',
+    configOverwrite: { prejoinPageEnabled: false },
+    interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false },
+    userInfo: { displayName: perfilSeleccionado ? perfilSeleccionado.nombre : 'Familiar' }
+  };
+  jitsiApiMovil = new JitsiMeetExternalAPI('8x8.vc', options);
+  jitsiApiMovil.addEventListener('videoConferenceLeft', () => {
+    cerrarJitsiMovil();
+  });
+}
+
+function cerrarJitsiMovil(){
+  const contenedor = document.getElementById('jitsiMovil');
+  contenedor.classList.remove('activo');
+  if (jitsiApiMovil) {
+    jitsiApiMovil.dispose();
+    jitsiApiMovil = null;
+  }
+  contenedor.innerHTML = '';
+}
+</script>
+</body>
+</html>
