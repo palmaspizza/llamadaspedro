@@ -7,22 +7,19 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
   html, body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI', Arial, sans-serif; background:#0b1220; }
-
   #app { width:100vw; height:100vh; position:relative; }
 
-  /* ---------- PANTALLA DE INICIO (requiere 1 clic por reinicio) ---------- */
   #pantallaInicio {
     position:fixed; inset:0; background:#0b1220; color:#fff;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     z-index:9999; text-align:center; padding:40px;
   }
-  #pantallaInicio h1 { font-size:3.2vw; margin-bottom:30px; }
+  #pantallaInicio h1 { font-size:3vw; margin-bottom:30px; }
   #btnIniciar {
     background:#2e7d32; color:#fff; border:none; border-radius:30px;
-    font-size:3vw; padding:40px 80px; cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,.5);
+    font-size:2.6vw; padding:35px 70px; cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,.5);
   }
 
-  /* ---------- ESTADO INACTIVO ---------- */
   #pantallaInactiva {
     position:fixed; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; text-align:center;
@@ -40,62 +37,55 @@
     color:#fff; font-size:26px; cursor:pointer; z-index:50;
   }
 
-  /* ---------- MODO PANTALLA NEGRA ---------- */
   #pantallaNegra {
     position:fixed; inset:0; background:#000; z-index:200; display:none;
     align-items:center; justify-content:center;
   }
   #pantallaNegra span { color:#222; font-size:1.4vw; }
 
-  /* ---------- ESTADO LLAMANDO ---------- */
   #pantallaLlamando {
     position:fixed; inset:0; display:none; flex-direction:column;
     align-items:center; justify-content:center; text-align:center; color:#fff;
     background: radial-gradient(circle at 50% 30%, #ff512f, #a5252c 70%);
     animation: pulseFondo 1.4s infinite ease-in-out;
   }
-  @keyframes pulseFondo {
-    0%,100% { filter:brightness(1); }
-    50% { filter:brightness(1.25); }
-  }
-  #avatarLlamador {
-    font-size:14vw; line-height:1; margin-bottom:10px;
-    animation: pulseAvatar 1s infinite ease-in-out;
-  }
-  @keyframes pulseAvatar {
-    0%,100% { transform:scale(1); }
-    50% { transform:scale(1.08); }
-  }
+  @keyframes pulseFondo { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.25);} }
+  #avatarLlamador { font-size:14vw; line-height:1; margin-bottom:10px; animation: pulseAvatar 1s infinite ease-in-out; }
+  @keyframes pulseAvatar { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
   #textoLlamador { font-size:5vw; font-weight:800; margin-bottom:10px; text-shadow:0 4px 10px rgba(0,0,0,.4); }
   #contador { font-size:2vw; opacity:.9; margin-bottom:40px; }
   #botonesLlamada { display:flex; gap:60px; }
   .btnLlamada {
-    border:none; border-radius:40px; font-size:2.6vw; font-weight:800; color:#fff;
-    padding:40px 60px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.4);
-    display:flex; flex-direction:column; align-items:center; gap:10px;
+    border:none; border-radius:40px; font-size:2.4vw; font-weight:800; color:#fff;
+    padding:35px 55px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.4);
+    display:flex; flex-direction:column; align-items:center; gap:8px;
   }
   .btnLlamada .icono { font-size:5vw; }
   #btnContestar { background:#1fa855; }
   #btnRechazar { background:#e63946; }
 
-  /* ---------- ESTADO EN LLAMADA ---------- */
-  #pantallaEnLlamada {
-    position:fixed; inset:0; display:none; flex-direction:column;
-    background:#000;
+  #pantallaEnLlamada { position:fixed; inset:0; display:none; flex-direction:column; background:#000; }
+  #videoGrid {
+    flex:1; display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:8px; padding:8px; overflow:auto;
   }
-  #jitsiContainer { flex:1; width:100%; }
-  #barraColgar {
-    height:12vh; display:flex; align-items:center; justify-content:center; background:#111;
+  .videoBox { position:relative; background:#111; border-radius:14px; overflow:hidden; }
+  .videoBox video { width:100%; height:100%; object-fit:cover; display:block; }
+  .videoBox .etiqueta {
+    position:absolute; bottom:6px; left:10px; color:#fff; font-size:1.1vw;
+    background:rgba(0,0,0,.5); padding:2px 10px; border-radius:8px;
   }
-  #btnColgar {
-    background:#e63946; color:#fff; border:none; border-radius:30px;
-    font-size:2.6vw; font-weight:800; padding:20px 70px; cursor:pointer;
-  }
+  #videoGrid .videoBox { width:min(45vw, 420px); height:min(45vw, 320px); }
+  #videoLocalBox { width:160px; height:120px; position:absolute; bottom:14vh; right:20px; z-index:5; border:2px solid #fff; }
+
+  #barraColgar { height:12vh; display:flex; align-items:center; justify-content:center; background:#111; }
+  #btnColgar { background:#e63946; color:#fff; border:none; border-radius:30px; font-size:2.4vw; font-weight:800; padding:18px 60px; cursor:pointer; }
 
   @media (max-width: 900px) {
     #saludo, #textoLlamador { font-size:8vw; }
     #reloj { font-size:14vw; }
-    .btnLlamada { font-size:4vw; padding:30px 40px; }
+    .btnLlamada { font-size:4vw; padding:26px 36px; }
+    .videoBox .etiqueta { font-size:3vw; }
   }
 </style>
 </head>
@@ -109,10 +99,10 @@
   </div>
 
   <div id="pantallaInactiva">
-    <div id="saludo">¡Hola Pedro Herrera!</div>
+    <div id="saludo">¡Hola Tata! 💛</div>
     <div id="reloj">--:--</div>
     <div id="fecha"></div>
-    <div id="mensajeTranquilo">Todo está bien en casa.</div>
+    <div id="mensajeTranquilo">Todo está bien en casa. Te queremos mucho.</div>
   </div>
 
   <button id="btnPantallaNegra" title="Modo descanso">🌙</button>
@@ -123,19 +113,17 @@
     <div id="textoLlamador">¡TE ESTÁ LLAMANDO...!</div>
     <div id="contador">Se contestará solo en 20 segundos...</div>
     <div id="botonesLlamada">
-      <button class="btnLlamada" id="btnContestar">
-        <span class="icono">✅</span>
-        CONTESTAR<br><small>(Presiona ENTER)</small>
-      </button>
-      <button class="btnLlamada" id="btnRechazar">
-        <span class="icono">❌</span>
-        RECHAZAR<br><small>(Presiona ESPACIO)</small>
-      </button>
+      <button class="btnLlamada" id="btnContestar"><span class="icono">✅</span>CONTESTAR<br><small>(Presiona ENTER)</small></button>
+      <button class="btnLlamada" id="btnRechazar"><span class="icono">❌</span>RECHAZAR<br><small>(Presiona ESPACIO)</small></button>
     </div>
   </div>
 
   <div id="pantallaEnLlamada">
-    <div id="jitsiContainer"></div>
+    <div id="videoGrid"></div>
+    <div id="videoLocalBox" class="videoBox">
+      <video id="videoLocal" autoplay playsinline muted></video>
+      <div class="etiqueta">Tú (Tata)</div>
+    </div>
     <div id="barraColgar">
       <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
     </div>
@@ -145,7 +133,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://8x8.vc/v1/external_api.js"></script>
 
 <script>
 /* ============================================================
@@ -164,8 +151,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const refLlamada = db.ref('llamada');
+const refSala = db.ref('sala');
+const refParticipantes = refSala.child('participantes');
+const refPares = refSala.child('pares');
 
-const NOMBRE_SALA = "FamiliaTataAlzheimer2026_SalaUnica";
+const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+const MI_ID = 'tata_' + Math.random().toString(36).slice(2,10);
 
 /* ============================================================
    ELEMENTOS DEL DOM
@@ -185,20 +176,22 @@ const contadorEl          = document.getElementById('contador');
 const btnContestar        = document.getElementById('btnContestar');
 const btnRechazar         = document.getElementById('btnRechazar');
 const btnColgar           = document.getElementById('btnColgar');
-const jitsiContainer      = document.getElementById('jitsiContainer');
+const videoGrid           = document.getElementById('videoGrid');
+const videoLocal          = document.getElementById('videoLocal');
 
 let estadoActual = 'inactiva';
 let timerAutoContestar = null;
-let segundosRestantes = 20;
 let intervaloContador = null;
-let jitsiApi = null;
+let segundosRestantes = 20;
 let audioCtx = null;
 let osciladorActivo = null;
-let sistemaIniciado = false;
 
-/* ============================================================
-   RELOJ
-   ============================================================ */
+let streamLocal = null;
+let conexiones = {};        // { otroId: RTCPeerConnection }
+let listenersPares = {};    // { otroId: [refs con .on() para poder quitarlos] }
+let enSala = false;
+
+/* ---------- RELOJ ---------- */
 function actualizarReloj(){
   const ahora = new Date();
   const hh = String(ahora.getHours()).padStart(2,'0');
@@ -209,98 +202,52 @@ function actualizarReloj(){
 setInterval(actualizarReloj, 1000);
 actualizarReloj();
 
-/* ============================================================
-   PANTALLA DE INICIO (habilita audio / notificaciones / fullscreen)
-   ============================================================ */
+/* ---------- PANTALLA DE INICIO ---------- */
 btnIniciar.addEventListener('click', () => {
-  sistemaIniciado = true;
   pantallaInicio.style.display = 'none';
-
-  // Habilitar audio
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  } catch(e){ console.warn('AudioContext no disponible', e); }
-
-  // Pedir permiso de notificaciones
-  if ('Notification' in window && Notification.permission !== 'granted') {
-    Notification.requestPermission();
-  }
-
-  // Pantalla completa
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  if ('Notification' in window && Notification.permission !== 'granted') Notification.requestPermission();
   const el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 });
 
-/* ============================================================
-   MODO PANTALLA NEGRA (AHORRO)
-   ============================================================ */
-btnPantallaNegra.addEventListener('click', () => {
-  pantallaNegra.style.display = 'flex';
-});
-pantallaNegra.addEventListener('click', () => {
-  pantallaNegra.style.display = 'none';
-});
+/* ---------- MODO PANTALLA NEGRA ---------- */
+btnPantallaNegra.addEventListener('click', () => { pantallaNegra.style.display = 'flex'; });
+pantallaNegra.addEventListener('click', () => { pantallaNegra.style.display = 'none'; });
+function salirDePantallaNegra(){ pantallaNegra.style.display = 'none'; }
 
-function salirDePantallaNegra(){
-  pantallaNegra.style.display = 'none';
-}
-
-/* ============================================================
-   TIMBRE (Web Audio API - oscilador en bucle)
-   ============================================================ */
+/* ---------- TIMBRE ---------- */
 function iniciarTimbre(){
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch(e){ return; }
-  }
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; } }
   detenerTimbre();
   osciladorActivo = { activo:true };
   const ctxLocal = audioCtx;
-
   function tocarPulso(){
     if (!osciladorActivo || !osciladorActivo.activo) return;
     const osc = ctxLocal.createOscillator();
     const gain = ctxLocal.createGain();
-    osc.type = 'square';
-    osc.frequency.value = 880;
-    gain.gain.value = 0.35;
-    osc.connect(gain);
-    gain.connect(ctxLocal.destination);
-    osc.start();
-    osc.stop(ctxLocal.currentTime + 0.5);
-    osc.onended = () => {
-      if (osciladorActivo && osciladorActivo.activo) {
-        setTimeout(tocarPulso, 350);
-      }
-    };
+    osc.type = 'square'; osc.frequency.value = 880; gain.gain.value = 0.35;
+    osc.connect(gain); gain.connect(ctxLocal.destination);
+    osc.start(); osc.stop(ctxLocal.currentTime + 0.5);
+    osc.onended = () => { if (osciladorActivo && osciladorActivo.activo) setTimeout(tocarPulso, 350); };
   }
   tocarPulso();
 }
-function detenerTimbre(){
-  if (osciladorActivo) osciladorActivo.activo = false;
-  osciladorActivo = null;
-}
+function detenerTimbre(){ if (osciladorActivo) osciladorActivo.activo = false; osciladorActivo = null; }
 
-/* ============================================================
-   NOTIFICACIÓN DE LLAMADA ENTRANTE
-   ============================================================ */
+/* ---------- NOTIFICACIÓN ---------- */
 function lanzarNotificacion(nombre){
   if ('Notification' in window && Notification.permission === 'granted') {
     try {
-      const notif = new Notification(`📞 ¡Llamada de ${nombre}!`, {
-        body: 'Toca para contestar',
-        requireInteraction: true
-      });
+      const notif = new Notification(`📞 ¡Llamada de ${nombre}!`, { body:'Toca para contestar', requireInteraction:true });
       notif.onclick = () => { window.focus(); notif.close(); };
-    } catch(e){ console.warn(e); }
+    } catch(e){}
   }
   window.focus();
 }
 
-/* ============================================================
-   CAMBIO DE PANTALLAS SEGÚN ESTADO
-   ============================================================ */
+/* ---------- CAMBIO DE PANTALLAS ---------- */
 function mostrarPantalla(estado){
   pantallaInactiva.style.display  = (estado === 'inactiva')   ? 'flex' : 'none';
   pantallaLlamando.style.display  = (estado === 'llamando')   ? 'flex' : 'none';
@@ -321,7 +268,6 @@ refLlamada.on('value', (snapshot) => {
     avatarLlamadorEl.textContent = datos.llamadorFoto || '👤';
     textoLlamadorEl.textContent = `¡TE ESTÁ LLAMANDO ${(datos.llamadorNombre || 'UN FAMILIAR').toUpperCase()}!`;
     mostrarPantalla('llamando');
-
     if (estadoAnterior !== 'llamando') {
       iniciarTimbre();
       lanzarNotificacion(datos.llamadorNombre || 'un familiar');
@@ -333,68 +279,51 @@ refLlamada.on('value', (snapshot) => {
     detenerTimbre();
     detenerCuentaRegresiva();
     mostrarPantalla('en_llamada');
-    if (!jitsiApi) iniciarJitsi();
+    if (!enSala) unirseALlamada();
   }
-  else { // inactiva
+  else {
     detenerTimbre();
     detenerCuentaRegresiva();
     mostrarPantalla('inactiva');
-    if (jitsiApi) {
-      jitsiApi.dispose();
-      jitsiApi = null;
-    }
+    if (enSala) salirDeLlamada();
   }
 });
 
-/* ============================================================
-   CUENTA REGRESIVA / AUTO-CONTESTAR (20s)
-   ============================================================ */
+/* ---------- CUENTA REGRESIVA / AUTO-CONTESTAR ---------- */
 function iniciarCuentaRegresiva(){
   segundosRestantes = 20;
   contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
   detenerCuentaRegresiva();
   intervaloContador = setInterval(() => {
     segundosRestantes--;
-    if (segundosRestantes > 0) {
-      contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
-    }
+    if (segundosRestantes > 0) contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
   }, 1000);
-  timerAutoContestar = setTimeout(() => {
-    if (estadoActual === 'llamando') contestarLlamada();
-  }, 20000);
+  timerAutoContestar = setTimeout(() => { if (estadoActual === 'llamando') contestarLlamada(); }, 20000);
 }
 function detenerCuentaRegresiva(){
   if (timerAutoContestar) clearTimeout(timerAutoContestar);
   if (intervaloContador) clearInterval(intervaloContador);
-  timerAutoContestar = null;
-  intervaloContador = null;
+  timerAutoContestar = null; intervaloContador = null;
 }
 
-/* ============================================================
-   ACCIONES: CONTESTAR / RECHAZAR / COLGAR
-   ============================================================ */
+/* ---------- ACCIONES ---------- */
 function contestarLlamada(){
-  detenerTimbre();
-  detenerCuentaRegresiva();
+  detenerTimbre(); detenerCuentaRegresiva();
   refLlamada.update({ estado: 'en_llamada' });
 }
 function rechazarLlamada(){
-  detenerTimbre();
-  detenerCuentaRegresiva();
+  detenerTimbre(); detenerCuentaRegresiva();
   refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
 }
 function colgarLlamada(){
   refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
-  if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+  refSala.remove(); // limpia toda la señalización para la próxima llamada
 }
-
 btnContestar.addEventListener('click', contestarLlamada);
 btnRechazar.addEventListener('click', rechazarLlamada);
 btnColgar.addEventListener('click', colgarLlamada);
 
-/* ============================================================
-   CAPTURA DE TECLADO INTELIGENTE (solo activa durante llamada)
-   ============================================================ */
+/* ---------- TECLADO INTELIGENTE ---------- */
 document.addEventListener('keydown', (e) => {
   if (estadoActual === 'llamando') {
     if (e.code === 'Enter') { e.preventDefault(); contestarLlamada(); }
@@ -402,35 +331,122 @@ document.addEventListener('keydown', (e) => {
   } else if (estadoActual === 'en_llamada') {
     if (e.code === 'Space') { e.preventDefault(); colgarLlamada(); }
   }
-  // En estado 'inactiva': ENTER y ESPACIO no hacen nada (no interfiere con YouTube, etc.)
 });
 
 /* ============================================================
-   JITSI MEET
+   WEBRTC + FIREBASE (mesh, sin librerías externas)
    ============================================================ */
-function iniciarJitsi(){
-  const domain = '8x8.vc';
-  const options = {
-    roomName: NOMBRE_SALA,
-    parentNode: jitsiContainer,
-    width: '100%',
-    height: '100%',
-    configOverwrite: {
-      startWithAudioMuted: false,
-      startWithVideoMuted: false,
-      prejoinPageEnabled: false,
-      disableInviteFunctions: true
-    },
-    interfaceConfigOverwrite: {
-      SHOW_JITSI_WATERMARK: false,
-      TOOLBAR_BUTTONS: []
-    },
-    userInfo: { displayName: 'Tata' }
-  };
-  jitsiApi = new JitsiMeetExternalAPI(domain, options);
-  jitsiApi.addEventListener('videoConferenceLeft', () => {
-    colgarLlamada();
+async function unirseALlamada(){
+  enSala = true;
+  try {
+    streamLocal = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+  } catch(e){
+    console.warn('Sin cámara/micrófono, se intenta solo audio', e);
+    try { streamLocal = await navigator.mediaDevices.getUserMedia({ audio:true }); }
+    catch(e2){ alert('No se pudo acceder a la cámara ni al micrófono.'); return; }
+  }
+  videoLocal.srcObject = streamLocal;
+
+  const miRef = refParticipantes.child(MI_ID);
+  miRef.set({ nombre:'Tata' });
+  miRef.onDisconnect().remove();
+
+  refParticipantes.on('child_added', (snap) => {
+    const otroId = snap.key;
+    if (otroId === MI_ID || conexiones[otroId]) return;
+    conectarConPeer(otroId, (snap.val() || {}).nombre || 'Familiar');
   });
+  refParticipantes.on('child_removed', (snap) => {
+    const otroId = snap.key;
+    cerrarConexionPeer(otroId);
+  });
+}
+
+function conectarConPeer(otroId, nombreOtro){
+  const pairKey = [MI_ID, otroId].sort().join('__');
+  const soyA = MI_ID < otroId;
+  const pc = new RTCPeerConnection(ICE_SERVERS);
+  conexiones[otroId] = pc;
+  listenersPares[otroId] = [];
+
+  streamLocal.getTracks().forEach(track => pc.addTrack(track, streamLocal));
+
+  pc.ontrack = (event) => {
+    let box = document.getElementById('caja_' + otroId);
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'videoBox';
+      box.id = 'caja_' + otroId;
+      box.innerHTML = `<video id="video_${otroId}" autoplay playsinline></video><div class="etiqueta">${nombreOtro}</div>`;
+      videoGrid.appendChild(box);
+    }
+    document.getElementById('video_' + otroId).srcObject = event.streams[0];
+  };
+
+  const refParPropio = refPares.child(pairKey).child(soyA ? 'candidatosA' : 'candidatosB');
+  pc.onicecandidate = (event) => {
+    if (event.candidate) refParPropio.push(event.candidate.toJSON());
+  };
+
+  if (soyA) {
+    pc.createOffer().then(offer => {
+      pc.setLocalDescription(offer);
+      refPares.child(pairKey).child('oferta').set(offer.toJSON ? offer.toJSON() : { type:offer.type, sdp:offer.sdp });
+    });
+    const refRespuesta = refPares.child(pairKey).child('respuesta');
+    const cbRespuesta = refRespuesta.on('value', (snap) => {
+      const val = snap.val();
+      if (val && !pc.currentRemoteDescription) {
+        pc.setRemoteDescription(new RTCSessionDescription(val));
+      }
+    });
+    listenersPares[otroId].push([refRespuesta, cbRespuesta]);
+
+    const refCandB = refPares.child(pairKey).child('candidatosB');
+    const cbCandB = refCandB.on('child_added', (snap) => {
+      pc.addIceCandidate(new RTCIceCandidate(snap.val())).catch(()=>{});
+    });
+    listenersPares[otroId].push([refCandB, cbCandB]);
+  } else {
+    const refOferta = refPares.child(pairKey).child('oferta');
+    const cbOferta = refOferta.on('value', async (snap) => {
+      const val = snap.val();
+      if (val && !pc.currentRemoteDescription) {
+        await pc.setRemoteDescription(new RTCSessionDescription(val));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        refPares.child(pairKey).child('respuesta').set({ type:answer.type, sdp:answer.sdp });
+      }
+    });
+    listenersPares[otroId].push([refOferta, cbOferta]);
+
+    const refCandA = refPares.child(pairKey).child('candidatosA');
+    const cbCandA = refCandA.on('child_added', (snap) => {
+      pc.addIceCandidate(new RTCIceCandidate(snap.val())).catch(()=>{});
+    });
+    listenersPares[otroId].push([refCandA, cbCandA]);
+  }
+}
+
+function cerrarConexionPeer(otroId){
+  const pc = conexiones[otroId];
+  if (pc) { pc.close(); delete conexiones[otroId]; }
+  (listenersPares[otroId] || []).forEach(([ref, cb]) => ref.off('value', cb));
+  delete listenersPares[otroId];
+  const box = document.getElementById('caja_' + otroId);
+  if (box) box.remove();
+}
+
+function salirDeLlamada(){
+  enSala = false;
+  refParticipantes.off('child_added');
+  refParticipantes.off('child_removed');
+  Object.keys(conexiones).forEach(cerrarConexionPeer);
+  conexiones = {}; listenersPares = {};
+  if (streamLocal) { streamLocal.getTracks().forEach(t => t.stop()); streamLocal = null; }
+  videoLocal.srcObject = null;
+  refParticipantes.child(MI_ID).remove();
+  videoGrid.innerHTML = '';
 }
 </script>
 </body>
