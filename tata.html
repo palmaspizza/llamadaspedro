@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Familia - Tata</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
+  html, body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI', Arial, sans-serif; background:#0b1220; }
+
+  #app { width:100vw; height:100vh; position:relative; }
+
+  /* ---------- PANTALLA DE INICIO (requiere 1 clic por reinicio) ---------- */
+  #pantallaInicio {
+    position:fixed; inset:0; background:#0b1220; color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:9999; text-align:center; padding:40px;
+  }
+  #pantallaInicio h1 { font-size:3.2vw; margin-bottom:30px; }
+  #btnIniciar {
+    background:#2e7d32; color:#fff; border:none; border-radius:30px;
+    font-size:3vw; padding:40px 80px; cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+
+  /* ---------- ESTADO INACTIVO ---------- */
+  #pantallaInactiva {
+    position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:linear-gradient(160deg,#1e3c72,#2a5298);
+    color:#fff;
+  }
+  #saludo { font-size:6vw; font-weight:700; margin-bottom:20px; }
+  #reloj { font-size:9vw; font-weight:800; letter-spacing:4px; }
+  #fecha { font-size:2.2vw; margin-top:10px; opacity:.9; }
+  #mensajeTranquilo { font-size:2.6vw; margin-top:50px; opacity:.95; }
+
+  #btnPantallaNegra {
+    position:fixed; bottom:20px; right:20px; width:60px; height:60px;
+    border-radius:50%; background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.4);
+    color:#fff; font-size:26px; cursor:pointer; z-index:50;
+  }
+
+  /* ---------- MODO PANTALLA NEGRA ---------- */
+  #pantallaNegra {
+    position:fixed; inset:0; background:#000; z-index:200; display:none;
+    align-items:center; justify-content:center;
+  }
+  #pantallaNegra span { color:#222; font-size:1.4vw; }
+
+  /* ---------- ESTADO LLAMANDO ---------- */
+  #pantallaLlamando {
+    position:fixed; inset:0; display:none; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; color:#fff;
+    background: radial-gradient(circle at 50% 30%, #ff512f, #a5252c 70%);
+    animation: pulseFondo 1.4s infinite ease-in-out;
+  }
+  @keyframes pulseFondo {
+    0%,100% { filter:brightness(1); }
+    50% { filter:brightness(1.25); }
+  }
+  #avatarLlamador {
+    font-size:14vw; line-height:1; margin-bottom:10px;
+    animation: pulseAvatar 1s infinite ease-in-out;
+  }
+  @keyframes pulseAvatar {
+    0%,100% { transform:scale(1); }
+    50% { transform:scale(1.08); }
+  }
+  #textoLlamador { font-size:5vw; font-weight:800; margin-bottom:10px; text-shadow:0 4px 10px rgba(0,0,0,.4); }
+  #contador { font-size:2vw; opacity:.9; margin-bottom:40px; }
+  #botonesLlamada { display:flex; gap:60px; }
+  .btnLlamada {
+    border:none; border-radius:40px; font-size:2.6vw; font-weight:800; color:#fff;
+    padding:40px 60px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.4);
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  .btnLlamada .icono { font-size:5vw; }
+  #btnContestar { background:#1fa855; }
+  #btnRechazar { background:#e63946; }
+
+  /* ---------- ESTADO EN LLAMADA ---------- */
+  #pantallaEnLlamada {
+    position:fixed; inset:0; display:none; flex-direction:column;
+    background:#000;
+  }
+  #jitsiContainer { flex:1; width:100%; }
+  #barraColgar {
+    height:12vh; display:flex; align-items:center; justify-content:center; background:#111;
+  }
+  #btnColgar {
+    background:#e63946; color:#fff; border:none; border-radius:30px;
+    font-size:2.6vw; font-weight:800; padding:20px 70px; cursor:pointer;
+  }
+
+  @media (max-width: 900px) {
+    #saludo, #textoLlamador { font-size:8vw; }
+    #reloj { font-size:14vw; }
+    .btnLlamada { font-size:4vw; padding:30px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div id="pantallaInicio">
+    <h1>Sistema de Videollamadas Familiares</h1>
+    <button id="btnIniciar">▶ TOCAR AQUÍ PARA INICIAR</button>
+  </div>
+
+  <div id="pantallaInactiva">
+    <div id="saludo">¡Hola Tata! 💛</div>
+    <div id="reloj">--:--</div>
+    <div id="fecha"></div>
+    <div id="mensajeTranquilo">Todo está bien en casa. Te queremos mucho.</div>
+  </div>
+
+  <button id="btnPantallaNegra" title="Modo descanso">🌙</button>
+  <div id="pantallaNegra"><span>Toca en cualquier parte para volver</span></div>
+
+  <div id="pantallaLlamando">
+    <div id="avatarLlamador">📞</div>
+    <div id="textoLlamador">¡TE ESTÁ LLAMANDO...!</div>
+    <div id="contador">Se contestará solo en 20 segundos...</div>
+    <div id="botonesLlamada">
+      <button class="btnLlamada" id="btnContestar">
+        <span class="icono">✅</span>
+        CONTESTAR<br><small>(Presiona ENTER)</small>
+      </button>
+      <button class="btnLlamada" id="btnRechazar">
+        <span class="icono">❌</span>
+        RECHAZAR<br><small>(Presiona ESPACIO)</small>
+      </button>
+    </div>
+  </div>
+
+  <div id="pantallaEnLlamada">
+    <div id="jitsiContainer"></div>
+    <div id="barraColgar">
+      <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://8x8.vc/v1/external_api.js"></script>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN DE FIREBASE
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDaarm67ndNx64YwmsEqhyEE-JI3G0zYpo",
+  authDomain: "pedrollamadas-f8e8c.firebaseapp.com",
+  databaseURL: "https://pedrollamadas-f8e8c-default-rtdb.firebaseio.com",
+  projectId: "pedrollamadas-f8e8c",
+  storageBucket: "pedrollamadas-f8e8c.firebasestorage.app",
+  messagingSenderId: "910857723610",
+  appId: "1:910857723610:web:94ba7b9c68d9c1c7d60fe3",
+  measurementId: "G-E2F40V1GZG"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const refLlamada = db.ref('llamada');
+
+const NOMBRE_SALA = "FamiliaTataAlzheimer2026_SalaUnica";
+
+/* ============================================================
+   ELEMENTOS DEL DOM
+   ============================================================ */
+const pantallaInicio     = document.getElementById('pantallaInicio');
+const btnIniciar         = document.getElementById('btnIniciar');
+const pantallaInactiva   = document.getElementById('pantallaInactiva');
+const pantallaLlamando   = document.getElementById('pantallaLlamando');
+const pantallaEnLlamada  = document.getElementById('pantallaEnLlamada');
+const pantallaNegra      = document.getElementById('pantallaNegra');
+const btnPantallaNegra   = document.getElementById('btnPantallaNegra');
+const relojEl            = document.getElementById('reloj');
+const fechaEl             = document.getElementById('fecha');
+const avatarLlamadorEl    = document.getElementById('avatarLlamador');
+const textoLlamadorEl     = document.getElementById('textoLlamador');
+const contadorEl          = document.getElementById('contador');
+const btnContestar        = document.getElementById('btnContestar');
+const btnRechazar         = document.getElementById('btnRechazar');
+const btnColgar           = document.getElementById('btnColgar');
+const jitsiContainer      = document.getElementById('jitsiContainer');
+
+let estadoActual = 'inactiva';
+let timerAutoContestar = null;
+let segundosRestantes = 20;
+let intervaloContador = null;
+let jitsiApi = null;
+let audioCtx = null;
+let osciladorActivo = null;
+let sistemaIniciado = false;
+
+/* ============================================================
+   RELOJ
+   ============================================================ */
+function actualizarReloj(){
+  const ahora = new Date();
+  const hh = String(ahora.getHours()).padStart(2,'0');
+  const mm = String(ahora.getMinutes()).padStart(2,'0');
+  relojEl.textContent = `${hh}:${mm}`;
+  fechaEl.textContent = ahora.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+/* ============================================================
+   PANTALLA DE INICIO (habilita audio / notificaciones / fullscreen)
+   ============================================================ */
+btnIniciar.addEventListener('click', () => {
+  sistemaIniciado = true;
+  pantallaInicio.style.display = 'none';
+
+  // Habilitar audio
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch(e){ console.warn('AudioContext no disponible', e); }
+
+  // Pedir permiso de notificaciones
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+
+  // Pantalla completa
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+});
+
+/* ============================================================
+   MODO PANTALLA NEGRA (AHORRO)
+   ============================================================ */
+btnPantallaNegra.addEventListener('click', () => {
+  pantallaNegra.style.display = 'flex';
+});
+pantallaNegra.addEventListener('click', () => {
+  pantallaNegra.style.display = 'none';
+});
+
+function salirDePantallaNegra(){
+  pantallaNegra.style.display = 'none';
+}
+
+/* ============================================================
+   TIMBRE (Web Audio API - oscilador en bucle)
+   ============================================================ */
+function iniciarTimbre(){
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e){ return; }
+  }
+  detenerTimbre();
+  osciladorActivo = { activo:true };
+  const ctxLocal = audioCtx;
+
+  function tocarPulso(){
+    if (!osciladorActivo || !osciladorActivo.activo) return;
+    const osc = ctxLocal.createOscillator();
+    const gain = ctxLocal.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 880;
+    gain.gain.value = 0.35;
+    osc.connect(gain);
+    gain.connect(ctxLocal.destination);
+    osc.start();
+    osc.stop(ctxLocal.currentTime + 0.5);
+    osc.onended = () => {
+      if (osciladorActivo && osciladorActivo.activo) {
+        setTimeout(tocarPulso, 350);
+      }
+    };
+  }
+  tocarPulso();
+}
+function detenerTimbre(){
+  if (osciladorActivo) osciladorActivo.activo = false;
+  osciladorActivo = null;
+}
+
+/* ============================================================
+   NOTIFICACIÓN DE LLAMADA ENTRANTE
+   ============================================================ */
+function lanzarNotificacion(nombre){
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      const notif = new Notification(`📞 ¡Llamada de ${nombre}!`, {
+        body: 'Toca para contestar',
+        requireInteraction: true
+      });
+      notif.onclick = () => { window.focus(); notif.close(); };
+    } catch(e){ console.warn(e); }
+  }
+  window.focus();
+}
+
+/* ============================================================
+   CAMBIO DE PANTALLAS SEGÚN ESTADO
+   ============================================================ */
+function mostrarPantalla(estado){
+  pantallaInactiva.style.display  = (estado === 'inactiva')   ? 'flex' : 'none';
+  pantallaLlamando.style.display  = (estado === 'llamando')   ? 'flex' : 'none';
+  pantallaEnLlamada.style.display = (estado === 'en_llamada') ? 'flex' : 'none';
+}
+
+/* ============================================================
+   LISTENER DE FIREBASE: /llamada
+   ============================================================ */
+refLlamada.on('value', (snapshot) => {
+  const datos = snapshot.val() || { estado:'inactiva' };
+  const estadoNuevo = datos.estado || 'inactiva';
+  const estadoAnterior = estadoActual;
+  estadoActual = estadoNuevo;
+
+  if (estadoNuevo === 'llamando') {
+    salirDePantallaNegra();
+    avatarLlamadorEl.textContent = datos.llamadorFoto || '👤';
+    textoLlamadorEl.textContent = `¡TE ESTÁ LLAMANDO ${(datos.llamadorNombre || 'UN FAMILIAR').toUpperCase()}!`;
+    mostrarPantalla('llamando');
+
+    if (estadoAnterior !== 'llamando') {
+      iniciarTimbre();
+      lanzarNotificacion(datos.llamadorNombre || 'un familiar');
+      iniciarCuentaRegresiva();
+    }
+  }
+  else if (estadoNuevo === 'en_llamada') {
+    salirDePantallaNegra();
+    detenerTimbre();
+    detenerCuentaRegresiva();
+    mostrarPantalla('en_llamada');
+    if (!jitsiApi) iniciarJitsi();
+  }
+  else { // inactiva
+    detenerTimbre();
+    detenerCuentaRegresiva();
+    mostrarPantalla('inactiva');
+    if (jitsiApi) {
+      jitsiApi.dispose();
+      jitsiApi = null;
+    }
+  }
+});
+
+/* ============================================================
+   CUENTA REGRESIVA / AUTO-CONTESTAR (20s)
+   ============================================================ */
+function iniciarCuentaRegresiva(){
+  segundosRestantes = 20;
+  contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
+  detenerCuentaRegresiva();
+  intervaloContador = setInterval(() => {
+    segundosRestantes--;
+    if (segundosRestantes > 0) {
+      contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
+    }
+  }, 1000);
+  timerAutoContestar = setTimeout(() => {
+    if (estadoActual === 'llamando') contestarLlamada();
+  }, 20000);
+}
+function detenerCuentaRegresiva(){
+  if (timerAutoContestar) clearTimeout(timerAutoContestar);
+  if (intervaloContador) clearInterval(intervaloContador);
+  timerAutoContestar = null;
+  intervaloContador = null;
+}
+
+/* ============================================================
+   ACCIONES: CONTESTAR / RECHAZAR / COLGAR
+   ============================================================ */
+function contestarLlamada(){
+  detenerTimbre();
+  detenerCuentaRegresiva();
+  refLlamada.update({ estado: 'en_llamada' });
+}
+function rechazarLlamada(){
+  detenerTimbre();
+  detenerCuentaRegresiva();
+  refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
+}
+function colgarLlamada(){
+  refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
+  if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+}
+
+btnContestar.addEventListener('click', contestarLlamada);
+btnRechazar.addEventListener('click', rechazarLlamada);
+btnColgar.addEventListener('click', colgarLlamada);
+
+/* ============================================================
+   CAPTURA DE TECLADO INTELIGENTE (solo activa durante llamada)
+   ============================================================ */
+document.addEventListener('keydown', (e) => {
+  if (estadoActual === 'llamando') {
+    if (e.code === 'Enter') { e.preventDefault(); contestarLlamada(); }
+    else if (e.code === 'Space') { e.preventDefault(); rechazarLlamada(); }
+  } else if (estadoActual === 'en_llamada') {
+    if (e.code === 'Space') { e.preventDefault(); colgarLlamada(); }
+  }
+  // En estado 'inactiva': ENTER y ESPACIO no hacen nada (no interfiere con YouTube, etc.)
+});
+
+/* ============================================================
+   JITSI MEET
+   ============================================================ */
+function iniciarJitsi(){
+  const domain = '8x8.vc';
+  const options = {
+    roomName: NOMBRE_SALA,
+    parentNode: jitsiContainer,
+    width: '100%',
+    height: '100%',
+    configOverwrite: {
+      startWithAudioMuted: false,
+      startWithVideoMuted: false,
+      prejoinPageEnabled: false,
+      disableInviteFunctions: true
+    },
+    interfaceConfigOverwrite: {
+      SHOW_JITSI_WATERMARK: false,
+      TOOLBAR_BUTTONS: []
+    },
+    userInfo: { displayName: 'Tata' }
+  };
+  jitsiApi = new JitsiMeetExternalAPI(domain, options);
+  jitsiApi.addEventListener('videoConferenceLeft', () => {
+    colgarLlamada();
+  });
+}
+</script>
+</body>
+</html>
