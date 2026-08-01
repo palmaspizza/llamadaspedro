@@ -130,7 +130,8 @@
   </div>
 
 </div>
-
+<!-- Agrega esta línea en el HTML -->
+<audio id="miAudioTimbre" src="tonollamada.mp3" loop preload="auto"></audio>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -218,24 +219,25 @@ pantallaNegra.addEventListener('click', () => { pantallaNegra.style.display = 'n
 function salirDePantallaNegra(){ pantallaNegra.style.display = 'none'; }
 
 /* ---------- TIMBRE ---------- */
-function iniciarTimbre(){
-  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; } }
-  detenerTimbre();
-  osciladorActivo = { activo:true };
-  const ctxLocal = audioCtx;
-  function tocarPulso(){
-    if (!osciladorActivo || !osciladorActivo.activo) return;
-    const osc = ctxLocal.createOscillator();
-    const gain = ctxLocal.createGain();
-    osc.type = 'square'; osc.frequency.value = 880; gain.gain.value = 0.35;
-    osc.connect(gain); gain.connect(ctxLocal.destination);
-    osc.start(); osc.stop(ctxLocal.currentTime + 0.5);
-    osc.onended = () => { if (osciladorActivo && osciladorActivo.activo) setTimeout(tocarPulso, 350); };
-  }
-  tocarPulso();
-}
-function detenerTimbre(){ if (osciladorActivo) osciladorActivo.activo = false; osciladorActivo = null; }
+/* ---------- TIMBRE CON MP3 ---------- */
+const miAudioTimbre = document.getElementById('miAudioTimbre');
 
+function iniciarTimbre(){
+  detenerTimbre();
+  if (miAudioTimbre) {
+    miAudioTimbre.currentTime = 0; // Reinicia el audio desde el principio
+    miAudioTimbre.play().catch(err => {
+      console.warn("El navegador bloqueó el autoplay del audio:", err);
+    });
+  }
+}
+
+function detenerTimbre(){
+  if (miAudioTimbre) {
+    miAudioTimbre.pause();
+    miAudioTimbre.currentTime = 0;
+  }
+}
 /* ---------- NOTIFICACIÓN ---------- */
 function lanzarNotificacion(nombre){
   if ('Notification' in window && Notification.permission === 'granted') {
