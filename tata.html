@@ -272,6 +272,46 @@ const FEATURES_VENTANA = 'popup=yes,width=1280,height=800,noopener,noreferrer';
    si existe el puente nativo AndroidBridge (inyectado por MainActivity.java),
    lo usamos para abrir una app/navegador de verdad. Si no existe (por
    ejemplo, cuando se usa tata.html en una PC), se abre como ventana nueva. */
+
+
+// Asegúrate de tener inicializado Firebase en tata.html antes de esto
+
+function iniciarRastreoGPS() {
+  if (!('geolocation' in navigator)) {
+    console.warn('El dispositivo del Tata no soporta GPS.');
+    return;
+  }
+
+  // watchPosition se queda escuchando los cambios de movimiento en tiempo real
+  navigator.geolocation.watchPosition(
+    (pos) => {
+      const ahora = new Date();
+      const horaFormateada = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')} hrs`;
+      
+      const payload = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude, 
+        precision: pos.coords.accuracy,
+        ultimaActualizacion: horaFormateada 
+      };
+      
+      // Enviamos la ubicación a Firebase para que la familia la lea
+      firebase.database().ref('ubicacion_tata').set(payload);
+    },
+    (err) => { 
+      console.error('Error de GPS en el celular del Tata:', err); 
+    },
+    { 
+      enableHighAccuracy: true, // Usa el chip GPS real
+      maximumAge: 15000, 
+      timeout: 20000 
+    }
+  );
+}
+
+// Ejecutar apenas cargue la página del Tata
+iniciarRastreoGPS();
+
 function abrirEnlaceExterno(url, nombreVentana){
   if (window.AndroidBridge && typeof window.AndroidBridge.abrirExterno === 'function') {
     window.AndroidBridge.abrirExterno(url);
