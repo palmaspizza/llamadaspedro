@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Familia - Tata</title>
+<title>Familia - Pedro</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
   html, body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI', Arial, sans-serif; background:#0b1220; }
@@ -99,7 +99,7 @@
   </div>
 
   <div id="pantallaInactiva">
-    <div id="saludo">¡Hola Tata! 💛</div>
+    <div id="saludo">¡Hola Pedro! 💛</div>
     <div id="reloj">--:--</div>
     <div id="fecha"></div>
     <div id="mensajeTranquilo">Todo está bien en casa. Te queremos mucho.</div>
@@ -122,7 +122,7 @@
     <div id="videoGrid"></div>
     <div id="videoLocalBox" class="videoBox">
       <video id="videoLocal" autoplay playsinline muted></video>
-      <div class="etiqueta">Tú (Tata)</div>
+      <div class="etiqueta">Tú (Pedro)</div>
     </div>
     <div id="barraColgar">
       <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
@@ -157,7 +157,7 @@ const refParticipantes = refSala.child('participantes');
 const refPares = refSala.child('pares');
 
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-const MI_ID = 'tata_' + Math.random().toString(36).slice(2,10);
+const MI_ID = 'Pedro_' + Math.random().toString(36).slice(2,10);
 
 /* ============================================================
    ELEMENTOS DEL DOM
@@ -179,6 +179,12 @@ const btnRechazar         = document.getElementById('btnRechazar');
 const btnColgar           = document.getElementById('btnColgar');
 const videoGrid           = document.getElementById('videoGrid');
 const videoLocal          = document.getElementById('videoLocal');
+
+/* Título normal de la pestaña vs. título "marcador" durante una llamada.
+   AutoHotkey vigila este marcador desde fuera del navegador para traer
+   la ventana al frente de CUALQUIER otra aplicación abierta en el PC. */
+const TITULO_NORMAL   = 'Familia - Pedro';
+const TITULO_LLAMADA  = '⚡LLAMADA_Pedro_ACTIVA⚡';
 
 let estadoActual = 'inactiva';
 let timerAutoContestar = null;
@@ -204,14 +210,21 @@ setInterval(actualizarReloj, 1000);
 actualizarReloj();
 
 /* ---------- PANTALLA DE INICIO ---------- */
-btnIniciar.addEventListener('click', () => {
+function iniciarSistema(){
   pantallaInicio.style.display = 'none';
   try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
-  if ('Notification' in window && Notification.permission !== 'granted') Notification.requestPermission();
   const el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-});
+}
+btnIniciar.addEventListener('click', iniciarSistema);
+
+/* Auto-inicio: apenas carga la página, arranca todo solo, sin tocar nada.
+   Para que el sonido del timbre (mp3) pueda reproducirse sin un clic
+   humano, Chrome se debe abrir con el flag --autoplay-policy=no-user-gesture-required
+   (ver instrucciones de instalación). Si por algún motivo el navegador
+   igual bloquea algo, el botón "TOCAR AQUÍ PARA INICIAR" sigue ahí de respaldo. */
+window.addEventListener('DOMContentLoaded', iniciarSistema);
 
 /* ---------- MODO PANTALLA NEGRA ---------- */
 btnPantallaNegra.addEventListener('click', () => { pantallaNegra.style.display = 'flex'; });
@@ -238,17 +251,6 @@ function detenerTimbre(){
     miAudioTimbre.currentTime = 0;
   }
 }
-/* ---------- NOTIFICACIÓN ---------- */
-function lanzarNotificacion(nombre){
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try {
-      const notif = new Notification(`📞 ¡Llamada de ${nombre}!`, { body:'Toca para contestar', requireInteraction:true });
-      notif.onclick = () => { window.focus(); notif.close(); };
-    } catch(e){}
-  }
-  window.focus();
-}
-
 /* ---------- CAMBIO DE PANTALLAS ---------- */
 function mostrarPantalla(estado){
   pantallaInactiva.style.display  = (estado === 'inactiva')   ? 'flex' : 'none';
@@ -266,17 +268,18 @@ refLlamada.on('value', (snapshot) => {
   estadoActual = estadoNuevo;
 
   if (estadoNuevo === 'llamando') {
+    document.title = TITULO_LLAMADA;
     salirDePantallaNegra();
     avatarLlamadorEl.textContent = datos.llamadorFoto || '👤';
     textoLlamadorEl.textContent = `¡TE ESTÁ LLAMANDO ${(datos.llamadorNombre || 'UN FAMILIAR').toUpperCase()}!`;
     mostrarPantalla('llamando');
     if (estadoAnterior !== 'llamando') {
       iniciarTimbre();
-      lanzarNotificacion(datos.llamadorNombre || 'un familiar');
       iniciarCuentaRegresiva();
     }
   }
   else if (estadoNuevo === 'en_llamada') {
+    document.title = TITULO_LLAMADA;
     salirDePantallaNegra();
     detenerTimbre();
     detenerCuentaRegresiva();
@@ -284,6 +287,7 @@ refLlamada.on('value', (snapshot) => {
     if (!enSala) unirseALlamada();
   }
   else {
+    document.title = TITULO_NORMAL;
     detenerTimbre();
     detenerCuentaRegresiva();
     mostrarPantalla('inactiva');
@@ -350,7 +354,7 @@ async function unirseALlamada(){
   videoLocal.srcObject = streamLocal;
 
   const miRef = refParticipantes.child(MI_ID);
-  miRef.set({ nombre:'Tata' });
+  miRef.set({ nombre:'Pedro' });
   miRef.onDisconnect().remove();
 
   refParticipantes.on('child_added', (snap) => {
