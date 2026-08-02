@@ -47,6 +47,18 @@
   #btnSpotify  { background:#1db954; }
   #btnFacebook { background:#1877f2; }
 
+  /* ---- Botón de audífonos Bluetooth (solo aparece junto a YouTube/Spotify) ---- */
+  #barraAudifonos {
+    display:flex; gap:16px; margin-top:22px; justify-content:center; flex-wrap:wrap;
+  }
+  .botonAudifonos {
+    border:none; border-radius:18px; color:#fff; font-weight:700;
+    font-size:1.1vw; padding:14px 22px; cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+  }
+  #btnAudifonosOn  { background:#2266dd; }
+  #btnAudifonosOff { background:#555; }
+
   #btnPantallaNegra {
     position:fixed; bottom:20px; right:20px; width:60px; height:60px;
     border-radius:50%; background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.4);
@@ -80,6 +92,24 @@
   #btnContestar { background:#1fa855; }
   #btnRechazar { background:#e63946; }
 
+  /* ---- Flechas gigantes hacia los botones físicos de volumen (Android) ----
+     Los botones de volumen están casi siempre en el lateral IZQUIERDO del
+     teléfono, por eso las flechas apuntan hacia allá. Si en tu modelo de
+     celular están al lado derecho, cambia "left:0" por "right:0" y voltea
+     el clip-path (invierte el orden de los porcentajes horizontales). */
+  .flechaVolumen {
+    position:fixed; left:0; width:24vw; height:24vh;
+    display:flex; align-items:center; justify-content:flex-end;
+    padding-right:6vw; text-align:right; color:#fff; font-weight:900;
+    font-size:1.6vw; line-height:1.3; z-index:80;
+    clip-path:polygon(100% 10%, 45% 10%, 0 50%, 45% 90%, 100% 90%);
+    animation: pulseFlecha 1s infinite ease-in-out;
+  }
+  @keyframes pulseFlecha { 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(-14px); } }
+  #flechaContestar { top:8vh;   background:linear-gradient(90deg,#0d7a3d,#1fa855); }
+  #flechaRechazar  { bottom:8vh; background:linear-gradient(90deg,#a5252c,#e63946); }
+  #flechaColgarVol { top:38vh;  background:linear-gradient(90deg,#a5252c,#e63946); }
+
   #pantallaEnLlamada { position:fixed; inset:0; display:none; flex-direction:column; background:#000; }
   #videoGrid {
     flex:1; display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
@@ -104,6 +134,8 @@
     .videoBox .etiqueta { font-size:3vw; }
     .botonEntretenimiento { font-size:3.6vw; min-width:120px; }
     .botonEntretenimiento .iconoEnt { font-size:7vw; }
+    .botonAudifonos { font-size:3.2vw; padding:16px 20px; }
+    .flechaVolumen { font-size:4vw; width:34vw; height:22vh; padding-right:8vw; }
   }
 </style>
 </head>
@@ -127,6 +159,10 @@
       <button class="botonEntretenimiento" id="btnSpotify"><span class="iconoEnt">🎵</span>ESCUCHAR MÚSICA</button>
       <button class="botonEntretenimiento" id="btnFacebook"><span class="iconoEnt">👥</span>FACEBOOK</button>
     </div>
+
+    <div id="barraAudifonos">
+      <button class="botonAudifonos" id="btnAudifonosOff">🔇 Apagar audífonos</button>
+    </div>
   </div>
 
   <button id="btnPantallaNegra" title="Modo descanso">🌙</button>
@@ -140,6 +176,8 @@
       <button class="btnLlamada" id="btnContestar"><span class="icono">✅</span>CONTESTAR<br><small>(Presiona ENTER)</small></button>
       <button class="btnLlamada" id="btnRechazar"><span class="icono">❌</span>RECHAZAR<br><small>(Presiona ESPACIO)</small></button>
     </div>
+    <div class="flechaVolumen" id="flechaContestar">VOLUMEN<br>ARRIBA<br>= CONTESTAR</div>
+    <div class="flechaVolumen" id="flechaRechazar">VOLUMEN<br>ABAJO<br>= RECHAZAR</div>
   </div>
 
   <div id="pantallaEnLlamada">
@@ -151,6 +189,7 @@
     <div id="barraColgar">
       <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
     </div>
+    <div class="flechaVolumen" id="flechaColgarVol">VOLUMEN<br>ABAJO<br>= COLGAR</div>
   </div>
 
 </div>
@@ -206,6 +245,8 @@ const videoLocal          = document.getElementById('videoLocal');
 const btnYoutube          = document.getElementById('btnYoutube');
 const btnSpotify          = document.getElementById('btnSpotify');
 const btnFacebook         = document.getElementById('btnFacebook');
+const btnAudifonosOff     = document.getElementById('btnAudifonosOff');
+const barraAudifonos      = document.getElementById('barraAudifonos');
 
 /* ============================================================
    ENTRETENIMIENTO: cada botón abre el sitio en una pestaña nueva
@@ -227,9 +268,47 @@ const URL_FACEBOOK = 'https://facebook.com';
    propio título en segundo plano. Con ventana separada, tata.html
    siempre conserva su propio título de ventana. */
 const FEATURES_VENTANA = 'popup=yes,width=1280,height=800,noopener,noreferrer';
-btnYoutube.addEventListener('click',  () => window.open(URL_YOUTUBE,  'ventanaYoutube',  FEATURES_VENTANA));
-btnSpotify.addEventListener('click',  () => window.open(URL_SPOTIFY,  'ventanaSpotify',  FEATURES_VENTANA));
-btnFacebook.addEventListener('click', () => window.open(URL_FACEBOOK, 'ventanaFacebook', FEATURES_VENTANA));
+
+/* Dentro de la app Android, window.open() de JavaScript NO hace nada
+   por defecto (a diferencia de un navegador de escritorio). Por eso,
+   si existe el puente nativo AndroidBridge (inyectado por MainActivity.java),
+   lo usamos para abrir una app/navegador de verdad. Si no existe (por
+   ejemplo, cuando se usa tata.html en una PC), se abre como ventana nueva. */
+function abrirEnlaceExterno(url, nombreVentana){
+  if (window.AndroidBridge && typeof window.AndroidBridge.abrirExterno === 'function') {
+    window.AndroidBridge.abrirExterno(url);
+  } else {
+    window.open(url, nombreVentana, FEATURES_VENTANA);
+  }
+}
+
+/* Audífonos Bluetooth: se encienden solos al abrir YouTube o Spotify (el
+   Tata usa audífonos Bluetooth ya emparejados de antes; Android los
+   reconecta solo con encender el radio, sin abrir nada más). En Facebook
+   NO se toca el Bluetooth para nada. Si el Tata no quiere usar audífonos,
+   el botón "Apagar audífonos" siempre está disponible para desconectarlos. */
+function activarAudifonosSiHayPuente(){
+  if (window.AndroidBridge && typeof window.AndroidBridge.activarBluetooth === 'function') {
+    window.AndroidBridge.activarBluetooth();
+  }
+}
+btnYoutube.addEventListener('click',  () => { activarAudifonosSiHayPuente(); abrirEnlaceExterno(URL_YOUTUBE,  'ventanaYoutube'); });
+btnSpotify.addEventListener('click',  () => { activarAudifonosSiHayPuente(); abrirEnlaceExterno(URL_SPOTIFY,  'ventanaSpotify'); });
+btnFacebook.addEventListener('click', () => abrirEnlaceExterno(URL_FACEBOOK, 'ventanaFacebook'));
+
+btnAudifonosOff.addEventListener('click', () => {
+  if (window.AndroidBridge && typeof window.AndroidBridge.desactivarBluetooth === 'function') {
+    window.AndroidBridge.desactivarBluetooth();
+  }
+});
+
+/* El botón de audífonos solo tiene sentido dentro de la app Android (con
+   AndroidBridge). Si tata.html se abre en un navegador normal (PC, o
+   pruebas), no hay forma de controlar el Bluetooth del sistema, así que
+   se oculta para no confundir. */
+if (!window.AndroidBridge) {
+  barraAudifonos.style.display = 'none';
+}
 
 /* Título normal de la pestaña vs. título "marcador" durante una llamada.
    El script vigilante.sh vigila este marcador desde fuera del navegador
