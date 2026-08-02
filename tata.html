@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Familia - Pedro</title>
+<title>Familia - Tata</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
   html, body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI', Arial, sans-serif; background:#0b1220; }
@@ -29,7 +29,23 @@
   #saludo { font-size:6vw; font-weight:700; margin-bottom:20px; }
   #reloj { font-size:9vw; font-weight:800; letter-spacing:4px; }
   #fecha { font-size:2.2vw; margin-top:10px; opacity:.9; }
-  #mensajeTranquilo { font-size:2.6vw; margin-top:50px; opacity:.95; }
+  #mensajeTranquilo { font-size:2.6vw; margin-top:40px; opacity:.95; }
+
+  /* ---- Botones gigantes de entretenimiento (abren en pestaña nueva) ---- */
+  #barraEntretenimiento {
+    display:flex; gap:24px; margin-top:50px; flex-wrap:wrap; justify-content:center;
+  }
+  .botonEntretenimiento {
+    border:none; border-radius:24px; color:#fff; font-weight:800;
+    font-size:1.6vw; padding:26px 30px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    min-width:170px;
+  }
+  .botonEntretenimiento .iconoEnt { font-size:3.2vw; }
+  #btnYoutube  { background:#cc0000; }
+  #btnSpotify  { background:#1db954; }
+  #btnFacebook { background:#1877f2; }
 
   #btnPantallaNegra {
     position:fixed; bottom:20px; right:20px; width:60px; height:60px;
@@ -86,6 +102,8 @@
     #reloj { font-size:14vw; }
     .btnLlamada { font-size:4vw; padding:26px 36px; }
     .videoBox .etiqueta { font-size:3vw; }
+    .botonEntretenimiento { font-size:3.6vw; min-width:120px; }
+    .botonEntretenimiento .iconoEnt { font-size:7vw; }
   }
 </style>
 </head>
@@ -99,10 +117,16 @@
   </div>
 
   <div id="pantallaInactiva">
-    <div id="saludo">¡Hola Pedro! 💛</div>
+    <div id="saludo">¡Hola Tata! 💛</div>
     <div id="reloj">--:--</div>
     <div id="fecha"></div>
     <div id="mensajeTranquilo">Todo está bien en casa. Te queremos mucho.</div>
+
+    <div id="barraEntretenimiento">
+      <button class="botonEntretenimiento" id="btnYoutube"><span class="iconoEnt">▶️</span>VER YOUTUBE</button>
+      <button class="botonEntretenimiento" id="btnSpotify"><span class="iconoEnt">🎵</span>ESCUCHAR MÚSICA</button>
+      <button class="botonEntretenimiento" id="btnFacebook"><span class="iconoEnt">👥</span>FACEBOOK</button>
+    </div>
   </div>
 
   <button id="btnPantallaNegra" title="Modo descanso">🌙</button>
@@ -122,7 +146,7 @@
     <div id="videoGrid"></div>
     <div id="videoLocalBox" class="videoBox">
       <video id="videoLocal" autoplay playsinline muted></video>
-      <div class="etiqueta">Tú (Pedro)</div>
+      <div class="etiqueta">Tú (Tata)</div>
     </div>
     <div id="barraColgar">
       <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
@@ -157,7 +181,7 @@ const refParticipantes = refSala.child('participantes');
 const refPares = refSala.child('pares');
 
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-const MI_ID = 'Pedro_' + Math.random().toString(36).slice(2,10);
+const MI_ID = 'tata_' + Math.random().toString(36).slice(2,10);
 
 /* ============================================================
    ELEMENTOS DEL DOM
@@ -179,12 +203,32 @@ const btnRechazar         = document.getElementById('btnRechazar');
 const btnColgar           = document.getElementById('btnColgar');
 const videoGrid           = document.getElementById('videoGrid');
 const videoLocal          = document.getElementById('videoLocal');
+const btnYoutube          = document.getElementById('btnYoutube');
+const btnSpotify          = document.getElementById('btnSpotify');
+const btnFacebook         = document.getElementById('btnFacebook');
+
+/* ============================================================
+   ENTRETENIMIENTO: cada botón abre el sitio en una pestaña nueva
+   del navegador (fuera de tata.html). Es la forma más simple y
+   confiable: YouTube, Spotify y Facebook no siempre permiten
+   mostrarse "adentro" de otra página (iframe), pero SIEMPRE se
+   pueden abrir en su propia pestaña.
+   ============================================================ */
+const URL_YOUTUBE  = 'https://youtube.com';
+const URL_SPOTIFY  = 'https://open.spotify.com';
+const URL_FACEBOOK = 'https://facebook.com';
+
+btnYoutube.addEventListener('click',  () => window.open(URL_YOUTUBE,  '_blank'));
+btnSpotify.addEventListener('click',  () => window.open(URL_SPOTIFY,  '_blank'));
+btnFacebook.addEventListener('click', () => window.open(URL_FACEBOOK, '_blank'));
 
 /* Título normal de la pestaña vs. título "marcador" durante una llamada.
-   AutoHotkey vigila este marcador desde fuera del navegador para traer
-   la ventana al frente de CUALQUIER otra aplicación abierta en el PC. */
-const TITULO_NORMAL   = 'Familia - Pedro';
-const TITULO_LLAMADA  = 'LLAMADA_Pedro_ACTIVA';
+   El script vigilante.sh vigila este marcador desde fuera del navegador
+   (Linux) para traer la ventana al frente de CUALQUIER otra aplicación
+   abierta en el PC, incluso si el Tata quedó viendo YouTube/Spotify/Facebook
+   en otra pestaña. */
+const TITULO_NORMAL   = 'Familia - Tata';
+const TITULO_LLAMADA  = '⚡LLAMADA_Pedro_ACTIVA⚡';
 
 let estadoActual = 'inactiva';
 let timerAutoContestar = null;
@@ -354,7 +398,7 @@ async function unirseALlamada(){
   videoLocal.srcObject = streamLocal;
 
   const miRef = refParticipantes.child(MI_ID);
-  miRef.set({ nombre:'Pedro' });
+  miRef.set({ nombre:'Tata' });
   miRef.onDisconnect().remove();
 
   refParticipantes.on('child_added', (snap) => {
