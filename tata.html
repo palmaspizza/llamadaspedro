@@ -98,17 +98,16 @@
      celular están al lado derecho, cambia "left:0" por "right:0" y voltea
      el clip-path (invierte el orden de los porcentajes horizontales). */
   .flechaVolumen {
-    position:fixed; left:0; width:24vw; height:24vh;
-    display:flex; align-items:center; justify-content:flex-end;
-    padding-right:6vw; text-align:right; color:#fff; font-weight:900;
+    position:fixed; right:0; width:24vw; height:24vh;
+    display:flex; align-items:center; justify-content:flex-start;
+    padding-left:6vw; text-align:left; color:#fff; font-weight:900;
     font-size:1.6vw; line-height:1.3; z-index:80;
-    clip-path:polygon(100% 10%, 45% 10%, 0 50%, 45% 90%, 100% 90%);
+    clip-path:polygon(0 10%, 55% 10%, 100% 50%, 55% 90%, 0 90%);
     animation: pulseFlecha 1s infinite ease-in-out;
   }
-  @keyframes pulseFlecha { 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(-14px); } }
-  #flechaContestar { top:8vh;   background:linear-gradient(90deg,#0d7a3d,#1fa855); }
-  #flechaRechazar  { bottom:8vh; background:linear-gradient(90deg,#a5252c,#e63946); }
-  #flechaColgarVol { top:38vh;  background:linear-gradient(90deg,#a5252c,#e63946); }
+  @keyframes pulseFlecha { 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(14px); } }
+  #flechaContestarArriba { top:8vh;    background:linear-gradient(90deg,#0d7a3d,#1fa855); }
+  #flechaContestarAbajo  { bottom:8vh; background:linear-gradient(90deg,#0d7a3d,#1fa855); }
 
   #pantallaEnLlamada { position:fixed; inset:0; display:none; flex-direction:column; background:#000; }
   #videoGrid {
@@ -173,11 +172,10 @@
     <div id="textoLlamador">¡TE ESTÁ LLAMANDO...!</div>
     <div id="contador">Se contestará solo en 20 segundos...</div>
     <div id="botonesLlamada">
-      <button class="btnLlamada" id="btnContestar"><span class="icono">✅</span>CONTESTAR<br><small>(Presiona ENTER)</small></button>
-      <button class="btnLlamada" id="btnRechazar"><span class="icono">❌</span>RECHAZAR<br><small>(Presiona ESPACIO)</small></button>
+      <button class="btnLlamada" id="btnContestar"><span class="icono">✅</span>CONTESTAR<br><small>(Presiona Botón de Volumen)</small></button>
     </div>
-    <div class="flechaVolumen" id="flechaContestar">VOLUMEN<br>ARRIBA<br>= CONTESTAR</div>
-    <div class="flechaVolumen" id="flechaRechazar">VOLUMEN<br>ABAJO<br>= RECHAZAR</div>
+    <div class="flechaVolumen" id="flechaContestarArriba">BOTÓN (+)<br>ARRIBA<br>= CONTESTAR</div>
+    <div class="flechaVolumen" id="flechaContestarAbajo">BOTÓN (-)<br>ABAJO<br>= CONTESTAR</div>
   </div>
 
   <div id="pantallaEnLlamada">
@@ -189,7 +187,7 @@
     <div id="barraColgar">
       <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
     </div>
-    <div class="flechaVolumen" id="flechaColgarVol">VOLUMEN<br>ABAJO<br>= COLGAR</div>
+    
   </div>
 
 </div>
@@ -473,10 +471,7 @@ btnColgar.addEventListener('click', colgarLlamada);
 /* ---------- TECLADO INTELIGENTE ---------- */
 document.addEventListener('keydown', (e) => {
   if (estadoActual === 'llamando') {
-    if (e.code === 'Enter') { e.preventDefault(); contestarLlamada(); }
-    else if (e.code === 'Space') { e.preventDefault(); rechazarLlamada(); }
-  } else if (estadoActual === 'en_llamada') {
-    if (e.code === 'Space') { e.preventDefault(); colgarLlamada(); }
+    if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); contestarLlamada(); }
   }
 });
 
@@ -595,6 +590,33 @@ function salirDeLlamada(){
   refParticipantes.child(MI_ID).remove();
   videoGrid.innerHTML = '';
 }
+
+
+/* ============================================================
+   TRANSMISIÓN DE UBICACIÓN GPS A FIREBASE
+   ============================================================ */
+const refUbicacion = db.ref('ubicacion_tata');
+
+function enviarUbicacion() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        refUbicacion.set({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          precision: position.coords.accuracy,
+          ultimaActualizacion: firebase.database.ServerValue.TIMESTAMP
+        });
+      },
+      (error) => console.warn("Error al obtener ubicación:", error),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+}
+
+// Enviar ubicación al cargar y luego cada 5 minutos
+enviarUbicacion();
+setInterval(enviarUbicacion, 300000);
 </script>
 </body>
 </html>
