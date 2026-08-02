@@ -218,9 +218,18 @@ const URL_YOUTUBE  = 'https://youtube.com';
 const URL_SPOTIFY  = 'https://open.spotify.com';
 const URL_FACEBOOK = 'https://facebook.com';
 
-btnYoutube.addEventListener('click',  () => window.open(URL_YOUTUBE,  '_blank'));
-btnSpotify.addEventListener('click',  () => window.open(URL_SPOTIFY,  '_blank'));
-btnFacebook.addEventListener('click', () => window.open(URL_FACEBOOK, '_blank'));
+/* IMPORTANTE: se abre con parámetros de tamaño (no solo '_blank') para
+   forzar que el navegador cree una VENTANA nueva de verdad, no una
+   pestaña dentro de la misma ventana de tata.html. Si fuera una pestaña,
+   el título que ve el sistema operativo (el que lee vigilante.sh) sería
+   el de la pestaña que el Tata esté mirando en ese momento, y nunca
+   encontraría el marcador de la llamada aunque tata.html sí cambió su
+   propio título en segundo plano. Con ventana separada, tata.html
+   siempre conserva su propio título de ventana. */
+const FEATURES_VENTANA = 'popup=yes,width=1280,height=800,noopener,noreferrer';
+btnYoutube.addEventListener('click',  () => window.open(URL_YOUTUBE,  'ventanaYoutube',  FEATURES_VENTANA));
+btnSpotify.addEventListener('click',  () => window.open(URL_SPOTIFY,  'ventanaSpotify',  FEATURES_VENTANA));
+btnFacebook.addEventListener('click', () => window.open(URL_FACEBOOK, 'ventanaFacebook', FEATURES_VENTANA));
 
 /* Título normal de la pestaña vs. título "marcador" durante una llamada.
    El script vigilante.sh vigila este marcador desde fuera del navegador
