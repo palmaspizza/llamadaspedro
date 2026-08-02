@@ -2,282 +2,204 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Llamar al PEDRO - Familia</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Familia - Tata</title>
 <style>
-  :root {
-    --bg-app: #0c1017;
-    --surface: #161b22;
-    --surface-glass: rgba(22, 27, 34, 0.85);
-    --primary: #3b82f6;
-    --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    --success: #10b981;
-    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --danger: #ef4444;
-    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    --text-main: #f3f4f6;
-    --text-muted: #9ca3af;
-    --border: rgba(255, 255, 255, 0.08);
-    --radius-lg: 24px;
-    --radius-md: 16px;
-    --radius-sm: 12px;
-    --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
+  html, body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI', Arial, sans-serif; background:#0b1220; }
+  #app { width:100vw; height:100vh; position:relative; }
+
+  #pantallaInicio {
+    position:fixed; inset:0; background:#0b1220; color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:9999; text-align:center; padding:40px;
+  }
+  #pantallaInicio h1 { font-size:3vw; margin-bottom:30px; }
+  #btnIniciar {
+    background:#2e7d32; color:#fff; border:none; border-radius:30px;
+    font-size:2.6vw; padding:35px 70px; cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,.5);
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg-app); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+  #pantallaInactiva {
+    position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    background:linear-gradient(160deg,#1e3c72,#2a5298);
+    color:#fff;
+  }
+  #saludo { font-size:6vw; font-weight:700; margin-bottom:20px; }
+  #reloj { font-size:9vw; font-weight:800; letter-spacing:4px; }
+  #fecha { font-size:2.2vw; margin-top:10px; opacity:.9; }
+  #mensajeTranquilo { font-size:2.6vw; margin-top:40px; opacity:.95; }
 
-  header { 
-    background: var(--surface-glass); 
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px; 
-    text-align: center; 
-    position: sticky;
-    top: 0;
-    z-index: 50;
+  /* ---- Botones gigantes de entretenimiento (abren en pestaña nueva) ---- */
+  #barraEntretenimiento {
+    display:flex; gap:24px; margin-top:50px; flex-wrap:wrap; justify-content:center;
   }
-  header h1 { font-size: 1rem; font-weight: 600; color: var(--text-main); letter-spacing: 0.02em; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .botonEntretenimiento {
+    border:none; border-radius:24px; color:#fff; font-weight:800;
+    font-size:1.6vw; padding:26px 30px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    min-width:170px;
+  }
+  .botonEntretenimiento .iconoEnt { font-size:3.2vw; }
+  #btnYoutube  { background:#cc0000; }
+  #btnSpotify  { background:#1db954; }
+  #btnFacebook { background:#1877f2; }
 
-  #appContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 20px 16px;
-    max-width: 480px;
-    margin: 0 auto;
-    width: 100%;
-    flex-grow: 1;
+  /* ---- Botón de audífonos Bluetooth (solo aparece junto a YouTube/Spotify) ---- */
+  #barraAudifonos {
+    display:flex; gap:16px; margin-top:22px; justify-content:center; flex-wrap:wrap;
   }
+  .botonAudifonos {
+    border:none; border-radius:18px; color:#fff; font-weight:700;
+    font-size:1.1vw; padding:14px 22px; cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+  }
+  #btnAudifonosOn  { background:#2266dd; }
+  #btnAudifonosOff { background:#555; }
 
-  #selectorPerfil { 
-    background: var(--surface); 
-    padding: 20px; 
-    border-radius: var(--radius-lg); 
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow); 
-    animation: fadeIn 0.4s ease;
-  }
-  #selectorPerfil h2 { font-size: 0.8rem; font-weight: 600; margin-bottom: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; }
-  .perfiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  
-  .perfilBtn { 
-    border: 1px solid var(--border); 
-    background: rgba(255, 255, 255, 0.02); 
-    border-radius: var(--radius-sm); 
-    padding: 10px 4px; 
-    text-align: center; 
-    cursor: pointer; 
-    font-size: 0.75rem; 
-    font-weight: 500;
-    color: var(--text-muted);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .perfilBtn img { 
-    width: 48px; 
-    height: 48px; 
-    border-radius: 50%; 
-    object-fit: cover; 
-    display: block; 
-    margin: 0 auto 6px auto; 
-    border: 2px solid var(--border);
-    transition: transform 0.2s, border-color 0.2s; 
-  }
-  .perfilBtn:hover { border-color: var(--primary); color: var(--text-main); background: rgba(59, 130, 246, 0.05); }
-  .perfilBtn:hover img { transform: scale(1.08); border-color: var(--primary); }
-  .perfilBtn.activo { border-color: var(--primary); background: rgba(59, 130, 246, 0.15); color: var(--text-main); font-weight: 600; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
-  .perfilBtn.activo img { border-color: var(--primary); }
-
-  #panelControl { width: 100%; }
-  
-  .btnGrande { 
-    width: 100%; 
-    border: none; 
-    border-radius: var(--radius-lg); 
-    color: #fff; 
-    font-size: 1rem; 
-    font-weight: 600; 
-    padding: 18px 24px; 
-    cursor: pointer; 
-    box-shadow: var(--shadow); 
-    text-align: center; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .btnGrande:active { transform: scale(0.97); }
-  
-  .btnLlamar   { background: var(--success-gradient); display: none; animation: pulseGlow 2s infinite; }
-  .btnCancelar { background: var(--danger-gradient); }
-  .btnSumarse  { background: var(--primary-gradient); }
-  .btnFinalizar{ 
-    background: var(--danger-gradient); 
-    font-size: 1.1rem; 
-    padding: 16px 32px; 
-    border-radius: 40px; 
-    width: auto; 
-    min-width: 220px; 
-    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.5); 
-    letter-spacing: 0.02em;
+  #btnPantallaNegra {
+    position:fixed; bottom:20px; right:20px; width:60px; height:60px;
+    border-radius:50%; background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.4);
+    color:#fff; font-size:26px; cursor:pointer; z-index:50;
   }
 
-  #estadoTexto { text-align: center; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); min-height: 20px; }
-
-  #seccionMapa { 
-    background: var(--surface); 
-    border-radius: var(--radius-lg); 
-    overflow: hidden; 
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow); 
+  #pantallaNegra {
+    position:fixed; inset:0; background:#000; z-index:200; display:none;
+    align-items:center; justify-content:center;
   }
-  #mapa { width: 100%; height: 240px; z-index: 1; }
-  #ultimaUbicacion {
-    text-align: center; padding: 14px; font-size: 0.75rem; color: var(--text-muted); background: var(--surface);
-    border-top: 1px solid var(--border); font-weight: 500;
-  }
-  #direccionTexto { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-top: 3px; }
+  #pantallaNegra span { color:#222; font-size:1.4vw; }
 
+  #pantallaLlamando {
+    position:fixed; inset:0; display:none; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; color:#fff;
+    background: radial-gradient(circle at 50% 30%, #ff512f, #a5252c 70%);
+    animation: pulseFondo 1.4s infinite ease-in-out;
+  }
+  @keyframes pulseFondo { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.25);} }
+  #avatarLlamador { font-size:14vw; line-height:1; margin-bottom:10px; animation: pulseAvatar 1s infinite ease-in-out; }
+  @keyframes pulseAvatar { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+  #textoLlamador { font-size:5vw; font-weight:800; margin-bottom:10px; text-shadow:0 4px 10px rgba(0,0,0,.4); }
+  #contador { font-size:2vw; opacity:.9; margin-bottom:40px; }
+  #botonesLlamada { display:flex; gap:60px; }
+  .btnLlamada {
+    border:none; border-radius:40px; font-size:2.4vw; font-weight:800; color:#fff;
+    padding:35px 55px; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,.4);
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .btnLlamada .icono { font-size:5vw; }
+  #btnContestar { background:#1fa855; }
+  #btnRechazar { background:#e63946; }
+
+  /* ---- Flechas gigantes hacia los botones físicos de volumen (Android) ----
+     Los botones de volumen están casi siempre en el lateral IZQUIERDO del
+     teléfono, por eso las flechas apuntan hacia allá. Si en tu modelo de
+     celular están al lado derecho, cambia "left:0" por "right:0" y voltea
+     el clip-path (invierte el orden de los porcentajes horizontales). */
+  .flechaVolumen {
+    position:fixed; right:0; width:24vw; height:24vh;
+    display:flex; align-items:center; justify-content:flex-start;
+    padding-left:6vw; text-align:left; color:#fff; font-weight:900;
+    font-size:1.6vw; line-height:1.3; z-index:80;
+    clip-path:polygon(0 10%, 55% 10%, 100% 50%, 55% 90%, 0 90%);
+    animation: pulseFlecha 1s infinite ease-in-out;
+  }
+  @keyframes pulseFlecha { 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(14px); } }
+  #flechaContestarArriba { top:8vh;    background:linear-gradient(90deg,#0d7a3d,#1fa855); }
+  #flechaContestarAbajo  { bottom:8vh; background:linear-gradient(90deg,#0d7a3d,#1fa855); }
+
+  #pantallaEnLlamada { position:fixed; inset:0; display:none; flex-direction:column; background:#000; }
   #videoGrid {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #07090e;
-    z-index: 9999;
-    padding: 20px;
-    gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    align-content: center;
-    justify-content: center;
+    flex:1; display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:8px; padding:8px; overflow:auto;
   }
-  body.en-videollamada #videoGrid { display: grid; animation: fadeIn 0.3s ease; }
-  body.en-videollamada #appContainer { display: none; }
+  .videoBox { position:relative; background:#111; border-radius:14px; overflow:hidden; }
+  .videoBox video { width:100%; height:100%; object-fit:cover; display:block; }
+  .videoBox .etiqueta {
+    position:absolute; bottom:6px; left:10px; color:#fff; font-size:1.1vw;
+    background:rgba(0,0,0,.5); padding:2px 10px; border-radius:8px;
+  }
+  #videoGrid .videoBox { width:min(45vw, 420px); height:min(45vw, 320px); }
+  #videoLocalBox { width:160px; height:120px; position:absolute; bottom:14vh; right:20px; z-index:5; border:2px solid #fff; }
 
-  .videoBox {
-    position: relative;
-    background: #111827;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    min-height: 280px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-  }
-  .videoBox video { width: 100%; height: 100%; object-fit: cover; }
-  .videoBox .etiqueta { 
-    position: absolute; bottom: 14px; left: 14px; color: #fff; font-size: 0.85rem; 
-    background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px); padding: 6px 14px; border-radius: var(--radius-sm); font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.1);
-  }
+  #barraColgar { height:12vh; display:flex; align-items:center; justify-content:center; background:#111; }
+  #btnColgar { background:#e63946; color:#fff; border:none; border-radius:30px; font-size:2.4vw; font-weight:800; padding:18px 60px; cursor:pointer; }
 
-  #controlesVideollamada {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10000;
-    display: none;
-    justify-content: center;
-    width: 100%;
-  }
-  body.en-videollamada #controlesVideollamada { display: flex; }
-
-  #pantallaGPS { 
-    position: fixed; inset: 0; background: var(--bg-app); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; z-index: 9999; 
-  }
-  #pantallaGPS h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 12px; }
-  #pantallaGPS p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; max-width: 360px; }
-  #estadoGPS { margin-top: 24px; font-size: 0.85rem; font-weight: 500; background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: var(--radius-md); box-shadow: var(--shadow); }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pulseGlow {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-  }
-
-  .foto-marcador {
-    border-radius: 50%;
-    border: 2px solid var(--primary);
-    background-color: var(--surface);
-    object-fit: cover;
-    box-shadow: var(--shadow);
-  }
-  .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-    background: var(--surface) !important;
-    color: var(--text-main) !important;
-    border-radius: var(--radius-sm) !important;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow) !important;
-  }
-  .popup-maps { text-align: center; font-family: inherit; }
-  .popup-maps p { margin-bottom: 8px; font-weight: 600; font-size: 12px; color: var(--text-main); }
-  .popup-maps .btn-maps {
-    background: var(--success-gradient); color: white; text-decoration: none; padding: 6px 12px;
-    border-radius: 8px; display: inline-block; font-weight: 600; font-size: 11px;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  @media (max-width: 900px) {
+    #saludo, #textoLlamador { font-size:8vw; }
+    #reloj { font-size:14vw; }
+    .btnLlamada { font-size:4vw; padding:26px 36px; }
+    .videoBox .etiqueta { font-size:3vw; }
+    .botonEntretenimiento { font-size:3.6vw; min-width:120px; }
+    .botonEntretenimiento .iconoEnt { font-size:7vw; }
+    .botonAudifonos { font-size:3.2vw; padding:16px 20px; }
+    .flechaVolumen { font-size:4vw; width:34vw; height:22vh; padding-right:8vw; }
   }
 </style>
 </head>
 <body>
 
-<div id="pantallaGPS" style="display:none;">
-  <h1>📍 Ubicación del PEDRO</h1>
-  <p>Transmitiendo ubicación en segundo plano de manera segura para la tranquilidad familiar.</p>
-  <div id="estadoGPS">Iniciando sistema GPS...</div>
-</div>
+<div id="app">
 
-<div id="appContainer">
-  <header><h1>📞 Familia del PEDRO</h1></header>
+  <div id="pantallaInicio">
+    <h1>Sistema de Videollamadas Familiares</h1>
+    <button id="btnIniciar">▶ TOCAR AQUÍ PARA INICIAR</button>
+  </div>
 
-  <div id="selectorPerfil">
-    <h2>¿Quién está llamando?</h2>
-    <div class="perfiles">
-      <div class="perfilBtn" data-nombre="Diego" data-foto="https://i.ibb.co/68Z7442/tata-avatar.png">
-        <img src="https://i.ibb.co/68Z7442/tata-avatar.png" alt="Diego">Diego
-      </div>
-      <div class="perfilBtn" data-nombre="Matias" data-foto="https://i.ibb.co/68Z7442/tata-avatar.png">
-        <img src="https://i.ibb.co/68Z7442/tata-avatar.png" alt="Matias">Matias
-      </div>
-      <div class="perfilBtn" data-nombre="María" data-foto="https://i.ibb.co/68Z7442/tata-avatar.png">
-        <img src="https://i.ibb.co/68Z7442/tata-avatar.png" alt="María">María
-      </div>
-      <div class="perfilBtn" data-nombre="Ingrid" data-foto="https://i.ibb.co/68Z7442/tata-avatar.png">
-        <img src="https://i.ibb.co/68Z7442/tata-avatar.png" alt="Ingrid">Ingrid
-      </div>
+  <div id="pantallaInactiva">
+    <div id="saludo">¡Hola Tata! 💛</div>
+    <div id="reloj">--:--</div>
+    <div id="fecha"></div>
+    <div id="mensajeTranquilo">Todo está bien en casa. Te queremos mucho.</div>
+
+    <div id="barraEntretenimiento">
+      <button class="botonEntretenimiento" id="btnYoutube"><span class="iconoEnt">▶️</span>VER YOUTUBE</button>
+      <button class="botonEntretenimiento" id="btnSpotify"><span class="iconoEnt">🎵</span>ESCUCHAR MÚSICA</button>
+      <button class="botonEntretenimiento" id="btnFacebook"><span class="iconoEnt">👥</span>FACEBOOK</button>
+    </div>
+
+    <div id="barraAudifonos">
+      <button class="botonAudifonos" id="btnAudifonosOff">🔇 Apagar audífonos</button>
     </div>
   </div>
 
-  <div id="estadoTexto"></div>
-  <div id="panelControl"></div>
+  <button id="btnPantallaNegra" title="Modo descanso">🌙</button>
+  <div id="pantallaNegra"><span>Toca en cualquier parte para volver</span></div>
 
-  <div id="seccionMapa">
-    <div id="mapa"></div>
-    <div id="ultimaUbicacion">
-      <span id="textoHora">Buscando ubicación del PEDRO...</span>
-      <span id="direccionTexto"></span>
+  <div id="pantallaLlamando">
+    <div id="avatarLlamador">📞</div>
+    <div id="textoLlamador">¡TE ESTÁ LLAMANDO...!</div>
+    <div id="contador">Se contestará solo en 20 segundos...</div>
+    <div id="botonesLlamada">
+      <button class="btnLlamada" id="btnContestar"><span class="icono">✅</span>CONTESTAR<br><small>(Presiona Botón de Volumen)</small></button>
     </div>
+    <div class="flechaVolumen" id="flechaContestarArriba">BOTÓN (+)<br>ARRIBA<br>= CONTESTAR</div>
+    <div class="flechaVolumen" id="flechaContestarAbajo">BOTÓN (-)<br>ABAJO<br>= CONTESTAR</div>
   </div>
+
+  <div id="pantallaEnLlamada">
+    <div id="videoGrid"></div>
+    <div id="videoLocalBox" class="videoBox">
+      <video id="videoLocal" autoplay playsinline muted></video>
+      <div class="etiqueta">Tú (Tata)</div>
+    </div>
+    <div id="barraColgar">
+      <button id="btnColgar">🔴 COLGAR (Presiona ESPACIO)</button>
+    </div>
+    
+  </div>
+
 </div>
-
-<div id="videoGrid"></div>
-<div id="controlesVideollamada"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Agrega esta línea en el HTML -->
+<audio id="miAudioTimbre" src="tonollamada.mp3" loop preload="auto"></audio>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
 <script>
+/* ============================================================
+   CONFIGURACIÓN DE FIREBASE
+   ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyDaarm67ndNx64YwmsEqhyEE-JI3G0zYpo",
   authDomain: "pedrollamadas-f8e8c.firebaseapp.com",
@@ -296,244 +218,330 @@ const refParticipantes = refSala.child('participantes');
 const refPares = refSala.child('pares');
 
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-const MI_ID = 'fam_' + Math.random().toString(36).slice(2,10);
+const MI_ID = 'tata_' + Math.random().toString(36).slice(2,10);
 
-let perfilSeleccionado = JSON.parse(localStorage.getItem('perfilFamilia') || 'null');
-let mapaLeaflet = null;
-let marcadorTata = null;
-let circuloPrecision = null;
-let ultimaLat = null;
-let ultimaLng = null;
-let estadoLlamadaActual = 'inactiva';
-let streamLocal = null;
-let conexiones = {};
-let listenersPares = {};
-let enSala = false;
+/* ============================================================
+   ELEMENTOS DEL DOM
+   ============================================================ */
+const pantallaInicio     = document.getElementById('pantallaInicio');
+const btnIniciar         = document.getElementById('btnIniciar');
+const pantallaInactiva   = document.getElementById('pantallaInactiva');
+const pantallaLlamando   = document.getElementById('pantallaLlamando');
+const pantallaEnLlamada  = document.getElementById('pantallaEnLlamada');
+const pantallaNegra      = document.getElementById('pantallaNegra');
+const btnPantallaNegra   = document.getElementById('btnPantallaNegra');
+const relojEl            = document.getElementById('reloj');
+const fechaEl             = document.getElementById('fecha');
+const avatarLlamadorEl    = document.getElementById('avatarLlamador');
+const textoLlamadorEl     = document.getElementById('textoLlamador');
+const contadorEl          = document.getElementById('contador');
+const btnContestar        = document.getElementById('btnContestar');
+const btnRechazar         = document.getElementById('btnRechazar');
+const btnColgar           = document.getElementById('btnColgar');
+const videoGrid           = document.getElementById('videoGrid');
+const videoLocal          = document.getElementById('videoLocal');
+const btnYoutube          = document.getElementById('btnYoutube');
+const btnSpotify          = document.getElementById('btnSpotify');
+const btnFacebook         = document.getElementById('btnFacebook');
+const btnAudifonosOff     = document.getElementById('btnAudifonosOff');
+const barraAudifonos      = document.getElementById('barraAudifonos');
 
-const parametros = new URLSearchParams(window.location.search);
-if (parametros.get('gps') === '1') {
-  document.getElementById('appContainer').style.display = 'none';
-  document.getElementById('pantallaGPS').style.display = 'flex';
-  iniciarEnvioGPS();
-} else {
-  iniciarAppFamiliar();
-}
+/* ============================================================
+   ENTRETENIMIENTO: cada botón abre el sitio en una pestaña nueva
+   del navegador (fuera de tata.html). Es la forma más simple y
+   confiable: YouTube, Spotify y Facebook no siempre permiten
+   mostrarse "adentro" de otra página (iframe), pero SIEMPRE se
+   pueden abrir en su propia pestaña.
+   ============================================================ */
+const URL_YOUTUBE  = 'https://youtube.com';
+const URL_SPOTIFY  = 'https://open.spotify.com';
+const URL_FACEBOOK = 'https://facebook.com';
 
-function iniciarEnvioGPS(){
-  const estadoGPS = document.getElementById('estadoGPS');
-  if (!('geolocation' in navigator)) { estadoGPS.textContent = 'GPS no soportado.'; return; }
+/* IMPORTANTE: se abre con parámetros de tamaño (no solo '_blank') para
+   forzar que el navegador cree una VENTANA nueva de verdad, no una
+   pestaña dentro de la misma ventana de tata.html. Si fuera una pestaña,
+   el título que ve el sistema operativo (el que lee vigilante.sh) sería
+   el de la pestaña que el Tata esté mirando en ese momento, y nunca
+   encontraría el marcador de la llamada aunque tata.html sí cambió su
+   propio título en segundo plano. Con ventana separada, tata.html
+   siempre conserva su propio título de ventana. */
+const FEATURES_VENTANA = 'popup=yes,width=1280,height=800,noopener,noreferrer';
+
+/* Dentro de la app Android, window.open() de JavaScript NO hace nada
+   por defecto (a diferencia de un navegador de escritorio). Por eso,
+   si existe el puente nativo AndroidBridge (inyectado por MainActivity.java),
+   lo usamos para abrir una app/navegador de verdad. Si no existe (por
+   ejemplo, cuando se usa tata.html en una PC), se abre como ventana nueva. */
+
+
+// Asegúrate de tener inicializado Firebase en tata.html antes de esto
+
+function iniciarRastreoGPS() {
+  if (!('geolocation' in navigator)) {
+    console.warn('El dispositivo del Tata no soporta GPS.');
+    return;
+  }
+
+  // watchPosition se queda escuchando los cambios de movimiento en tiempo real
   navigator.geolocation.watchPosition(
     (pos) => {
       const ahora = new Date();
-      const hora = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')} hrs`;
-      const payload = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: pos.coords.accuracy, ultimaActualizacion: hora };
-      db.ref('ubicacion_tata').set(payload);
-      db.ref('ubicacion').set(payload);
-      estadoGPS.textContent = `✅ Transmitiendo señal (${hora})`;
+      const horaFormateada = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')} hrs`;
+      
+      const payload = { 
+        lat: pos.coords.latitude, 
+        lng: pos.coords.longitude, 
+        precision: pos.coords.accuracy,
+        ultimaActualizacion: horaFormateada 
+      };
+      
+      // Enviamos la ubicación a Firebase para que la familia la lea
+      firebase.database().ref('ubicacion_tata').set(payload);
     },
-    (err) => { estadoGPS.textContent = '⚠️ Active el permiso de ubicación.'; },
-    { enableHighAccuracy:true, maximumAge:15000, timeout:20000 }
+    (err) => { 
+      console.error('Error de GPS en el celular del Tata:', err); 
+    },
+    { 
+      enableHighAccuracy: true, // Usa el chip GPS real
+      maximumAge: 15000, 
+      timeout: 20000 
+    }
   );
 }
 
-function iniciarAppFamiliar(){
-  inicializarMapa();
-  escucharUbicacion();
-  configurarSelectorPerfil();
-  escucharEstadoLlamada();
+// Ejecutar apenas cargue la página del Tata
+iniciarRastreoGPS();
+
+function abrirEnlaceExterno(url, nombreVentana){
+  if (window.AndroidBridge && typeof window.AndroidBridge.abrirExterno === 'function') {
+    window.AndroidBridge.abrirExterno(url);
+  } else {
+    window.open(url, nombreVentana, FEATURES_VENTANA);
+  }
 }
 
-function inicializarMapa(){
-  mapaLeaflet = L.map('mapa', { zoomControl: false }).setView([-33.4372, -70.6506], 17);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution:'&copy; OpenStreetMap' }).addTo(mapaLeaflet);
+/* Audífonos Bluetooth: se encienden solos al abrir YouTube o Spotify (el
+   Tata usa audífonos Bluetooth ya emparejados de antes; Android los
+   reconecta solo con encender el radio, sin abrir nada más). En Facebook
+   NO se toca el Bluetooth para nada. Si el Tata no quiere usar audífonos,
+   el botón "Apagar audífonos" siempre está disponible para desconectarlos.
+
+   IMPORTANTE: se usa UN SOLO método del puente (abrirConAudifonos) que
+   hace las dos cosas EN ORDEN dentro de Android: primero enciende el
+   Bluetooth (esperando si hace falta que el Tata toque "Permitir"), y
+   RECIÉN DESPUÉS abre YouTube/Spotify. Si se llamaran por separado como
+   antes, abrir la app de inmediato tapaba el aviso de Bluetooth antes de
+   que nadie pudiera tocarlo, y el Bluetooth nunca llegaba a encenderse. */
+function abrirYoutubeOSpotify(url, nombreVentana){
+  if (window.AndroidBridge && typeof window.AndroidBridge.abrirConAudifonos === 'function') {
+    window.AndroidBridge.abrirConAudifonos(url);
+  } else {
+    window.open(url, nombreVentana, FEATURES_VENTANA);
+  }
+}
+btnYoutube.addEventListener('click',  () => abrirYoutubeOSpotify(URL_YOUTUBE, 'ventanaYoutube'));
+btnSpotify.addEventListener('click',  () => abrirYoutubeOSpotify(URL_SPOTIFY, 'ventanaSpotify'));
+btnFacebook.addEventListener('click', () => abrirEnlaceExterno(URL_FACEBOOK, 'ventanaFacebook'));
+
+btnAudifonosOff.addEventListener('click', () => {
+  if (window.AndroidBridge && typeof window.AndroidBridge.desactivarBluetooth === 'function') {
+    window.AndroidBridge.desactivarBluetooth();
+  }
+});
+
+/* El botón de audífonos solo tiene sentido dentro de la app Android (con
+   AndroidBridge). Si tata.html se abre en un navegador normal (PC, o
+   pruebas), no hay forma de controlar el Bluetooth del sistema, así que
+   se oculta para no confundir. */
+if (!window.AndroidBridge) {
+  barraAudifonos.style.display = 'none';
 }
 
-function escucharUbicacion(){
-  const iconoTata = L.icon({
-    iconUrl: 'https://i.ibb.co/68Z7442/tata-avatar.png',
-    iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -24], className: 'foto-marcador'
-  });
+/* Título normal de la pestaña vs. título "marcador" durante una llamada.
+   El script vigilante.sh vigila este marcador desde fuera del navegador
+   (Linux) para traer la ventana al frente de CUALQUIER otra aplicación
+   abierta en el PC, incluso si el Tata quedó viendo YouTube/Spotify/Facebook
+   en otra pestaña. */
+const TITULO_NORMAL   = 'Familia - Tata';
+const TITULO_LLAMADA  = '⚡LLAMADA_Pedro_ACTIVA⚡';
 
-  const procesarUbicacion = (snap) => {
-    const datos = snap.val();
-    if (!datos || datos.lat == null || datos.lng == null) return;
-    const { lat, lng, precision, ultimaActualizacion } = datos;
-    let hora = typeof ultimaActualizacion === 'string' ? ultimaActualizacion : 'Reciente';
+let estadoActual = 'inactiva';
+let timerAutoContestar = null;
+let intervaloContador = null;
+let segundosRestantes = 20;
+let audioCtx = null;
+let osciladorActivo = null;
 
-    if (lat !== ultimaLat || lng !== ultimaLng) {
-      ultimaLat = lat; ultimaLng = lng;
-      obtenerDireccionTexto(lat, lng);
-    }
-    
-    const urlMaps = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    const popupHtml = `<div class="popup-maps"><p>👨‍🦳 PEDRO está aquí</p><a href="${urlMaps}" target="_blank" class="btn-maps">🗺️ Abrir Maps</a></div>`;
+let streamLocal = null;
+let conexiones = {};        // { otroId: RTCPeerConnection }
+let listenersPares = {};    // { otroId: [refs con .on() para poder quitarlos] }
+let enSala = false;
 
-    if (!marcadorTata) {
-      marcadorTata = L.marker([lat, lng], { icon: iconoTata }).addTo(mapaLeaflet).bindPopup(popupHtml);
-      if (precision) circuloPrecision = L.circle([lat, lng], { radius: precision, color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.15 }).addTo(mapaLeaflet);
-    } else {
-      marcadorTata.setLatLng([lat, lng]);
-      marcadorTata.setPopupContent(popupHtml);
-      if (circuloPrecision) { circuloPrecision.setLatLng([lat, lng]); if (precision) circuloPrecision.setRadius(precision); }
-    }
-    mapaLeaflet.panTo([lat, lng]);
-    document.getElementById('textoHora').textContent = `Actualizado: ${hora}`;
-  };
-
-  db.ref('ubicacion_tata').on('value', procesarUbicacion);
-  db.ref('ubicacion').on('value', procesarUbicacion);
+/* ---------- RELOJ ---------- */
+function actualizarReloj(){
+  const ahora = new Date();
+  const hh = String(ahora.getHours()).padStart(2,'0');
+  const mm = String(ahora.getMinutes()).padStart(2,'0');
+  relojEl.textContent = `${hh}:${mm}`;
+  fechaEl.textContent = ahora.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
 }
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
 
-function obtenerDireccionTexto(lat, lng) {
-  fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-    headers: { 'Accept-Language': 'es' }
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.display_name) {
-        document.getElementById('direccionTexto').textContent = `📍 ${data.display_name.split(',').slice(0, 3).join(',')}`;
-      }
-    }).catch(() => {
-      document.getElementById('direccionTexto').textContent = `📍 Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+/* ---------- PANTALLA DE INICIO ---------- */
+function iniciarSistema(){
+  pantallaInicio.style.display = 'none';
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+btnIniciar.addEventListener('click', iniciarSistema);
+
+/* Auto-inicio: apenas carga la página, arranca todo solo, sin tocar nada.
+   Para que el sonido del timbre (mp3) pueda reproducirse sin un clic
+   humano, Chrome se debe abrir con el flag --autoplay-policy=no-user-gesture-required
+   (ver instrucciones de instalación). Si por algún motivo el navegador
+   igual bloquea algo, el botón "TOCAR AQUÍ PARA INICIAR" sigue ahí de respaldo. */
+window.addEventListener('DOMContentLoaded', iniciarSistema);
+
+/* ---------- MODO PANTALLA NEGRA ---------- */
+btnPantallaNegra.addEventListener('click', () => { pantallaNegra.style.display = 'flex'; });
+pantallaNegra.addEventListener('click', () => { pantallaNegra.style.display = 'none'; });
+function salirDePantallaNegra(){ pantallaNegra.style.display = 'none'; }
+
+/* ---------- TIMBRE ---------- */
+/* ---------- TIMBRE CON MP3 ---------- */
+const miAudioTimbre = document.getElementById('miAudioTimbre');
+
+function iniciarTimbre(){
+  detenerTimbre();
+  if (miAudioTimbre) {
+    miAudioTimbre.currentTime = 0; // Reinicia el audio desde el principio
+    miAudioTimbre.play().catch(err => {
+      console.warn("El navegador bloqueó el autoplay del audio:", err);
     });
+  }
 }
 
-function configurarSelectorPerfil(){
-  const botones = document.querySelectorAll('.perfilBtn');
-  botones.forEach(btn => {
-    if (perfilSeleccionado && btn.dataset.nombre === perfilSeleccionado.nombre) btn.classList.add('activo');
-    btn.addEventListener('click', () => {
-      botones.forEach(b => b.classList.remove('activo'));
-      btn.classList.add('activo');
-      perfilSeleccionado = { nombre: btn.dataset.nombre, foto: btn.dataset.foto };
-      localStorage.setItem('perfilFamilia', JSON.stringify(perfilSeleccionado));
-      const btnLlamar = document.querySelector('.btnLlamar');
-      if (btnLlamar) btnLlamar.style.display = 'flex';
-    });
-  });
+function detenerTimbre(){
+  if (miAudioTimbre) {
+    miAudioTimbre.pause();
+    miAudioTimbre.currentTime = 0;
+  }
+}
+/* ---------- CAMBIO DE PANTALLAS ---------- */
+function mostrarPantalla(estado){
+  pantallaInactiva.style.display  = (estado === 'inactiva')   ? 'flex' : 'none';
+  pantallaLlamando.style.display  = (estado === 'llamando')   ? 'flex' : 'none';
+  pantallaEnLlamada.style.display = (estado === 'en_llamada') ? 'flex' : 'none';
 }
 
-function escucharEstadoLlamada(){
-  refLlamada.on('value', (snap) => {
-    const datos = snap.val() || { estado:'inactiva' };
-    estadoLlamadaActual = datos.estado || 'inactiva';
-    renderizarPanel(datos);
-    if (estadoLlamadaActual === 'inactiva' && enSala) {
-      salirDeLlamada();
-    } else if (estadoLlamadaActual === 'en_llamada' && !enSala) {
-      unirseALlamada();
+/* ============================================================
+   LISTENER DE FIREBASE: /llamada
+   ============================================================ */
+refLlamada.on('value', (snapshot) => {
+  const datos = snapshot.val() || { estado:'inactiva' };
+  const estadoNuevo = datos.estado || 'inactiva';
+  const estadoAnterior = estadoActual;
+  estadoActual = estadoNuevo;
+
+  if (estadoNuevo === 'llamando') {
+    document.title = TITULO_LLAMADA;
+    salirDePantallaNegra();
+    avatarLlamadorEl.textContent = datos.llamadorFoto || '👤';
+    textoLlamadorEl.textContent = `¡TE ESTÁ LLAMANDO ${(datos.llamadorNombre || 'UN FAMILIAR').toUpperCase()}!`;
+    mostrarPantalla('llamando');
+    if (estadoAnterior !== 'llamando') {
+      iniciarTimbre();
+      iniciarCuentaRegresiva();
     }
-  });
-}
-
-function renderizarPanel(datos){
-  const panel = document.getElementById('panelControl');
-  const estadoTexto = document.getElementById('estadoTexto');
-  const controlesVideo = document.getElementById('controlesVideollamada');
-  panel.innerHTML = '';
-  controlesVideo.innerHTML = '';
-
-  if (estadoLlamadaActual === 'inactiva') {
-    estadoTexto.textContent = '';
-    const btn = crearBoton('btnLlamar', '📞 LLAMAR AL PEDRO', llamarTata);
-    if (perfilSeleccionado) btn.style.display = 'flex';
-    panel.appendChild(btn);
   }
-  else if (estadoLlamadaActual === 'llamando') {
-    estadoTexto.textContent = `Llamando al equipo... (${datos.llamadorNombre || ''})`;
-    panel.appendChild(crearBoton('btnCancelar', '✖ CANCELAR LLAMADA', finalizarLlamadaParaTodos));
+  else if (estadoNuevo === 'en_llamada') {
+    document.title = TITULO_LLAMADA;
+    salirDePantallaNegra();
+    detenerTimbre();
+    detenerCuentaRegresiva();
+    mostrarPantalla('en_llamada');
+    if (!enSala) unirseALlamada();
   }
-  else if (estadoLlamadaActual === 'en_llamada') {
-    estadoTexto.textContent = '🟢 El PEDRO está en llamada';
-    if (!enSala) panel.appendChild(crearBoton('btnSumarse', '➕ SUMARSE A LA LLAMADA', sumarseALlamada));
-    controlesVideo.appendChild(crearBoton('btnFinalizar', '🔴 COLGAR LLAMADA', salirDeLlamadaIndividual));
+  else {
+    document.title = TITULO_NORMAL;
+    detenerTimbre();
+    detenerCuentaRegresiva();
+    mostrarPantalla('inactiva');
+    if (enSala) salirDeLlamada();
   }
+});
+
+/* ---------- CUENTA REGRESIVA / AUTO-CONTESTAR ---------- */
+function iniciarCuentaRegresiva(){
+  segundosRestantes = 20;
+  contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
+  detenerCuentaRegresiva();
+  intervaloContador = setInterval(() => {
+    segundosRestantes--;
+    if (segundosRestantes > 0) contadorEl.textContent = `Se contestará solo en ${segundosRestantes} segundos...`;
+  }, 1000);
+  timerAutoContestar = setTimeout(() => { if (estadoActual === 'llamando') contestarLlamada(); }, 20000);
+}
+function detenerCuentaRegresiva(){
+  if (timerAutoContestar) clearTimeout(timerAutoContestar);
+  if (intervaloContador) clearInterval(intervaloContador);
+  timerAutoContestar = null; intervaloContador = null;
 }
 
-function crearBoton(clase, texto, accion){
-  const b = document.createElement('button');
-  b.className = `btnGrande ${clase}`;
-  b.textContent = texto;
-  b.addEventListener('click', accion);
-  return b;
+/* ---------- ACCIONES ---------- */
+function contestarLlamada(){
+  detenerTimbre(); detenerCuentaRegresiva();
+  refLlamada.update({ estado: 'en_llamada' });
 }
-
-function llamarTata(){
-  if (!perfilSeleccionado) { alert('Selecciona quién está llamando primero 🙂'); return; }
-  refLlamada.set({ 
-    estado: 'en_llamada', 
-    llamadorNombre: perfilSeleccionado.nombre || 'Familiar', 
-    llamadorFoto: perfilSeleccionado.foto || '' 
-  });
-  unirseALlamada();
-}
-
-function sumarseALlamada(){ unirseALlamada(); }
-
-function finalizarLlamadaParaTodos(){
+function rechazarLlamada(){
+  detenerTimbre(); detenerCuentaRegresiva();
   refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
-  refSala.remove();
-  salirDeLlamada();
 }
+function colgarLlamada(){
+  refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
+  refSala.remove(); // limpia toda la señalización para la próxima llamada
+}
+btnContestar.addEventListener('click', contestarLlamada);
+btnRechazar.addEventListener('click', rechazarLlamada);
+btnColgar.addEventListener('click', colgarLlamada);
 
-async function salirDeLlamadaIndividual(){
-  salirDeLlamada();
-  const snap = await refParticipantes.once('value');
-  if (!snap.exists() || snap.numChildren() === 0) {
-    refLlamada.set({ estado:'inactiva', llamadorNombre:'', llamadorFoto:'' });
-    refSala.remove();
+/* ---------- TECLADO INTELIGENTE ---------- */
+document.addEventListener('keydown', (e) => {
+  if (estadoActual === 'llamando') {
+    if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); contestarLlamada(); }
   }
-}
+});
 
+/* ============================================================
+   WEBRTC + FIREBASE (mesh, sin librerías externas)
+   ============================================================ */
 async function unirseALlamada(){
-  if (enSala) return;
   enSala = true;
-  document.body.classList.add('en-videollamada');
-
   try {
     streamLocal = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
   } catch(e){
+    console.warn('Sin cámara/micrófono, se intenta solo audio', e);
     try { streamLocal = await navigator.mediaDevices.getUserMedia({ audio:true }); }
-    catch(e2){ alert('Sin acceso a cámara ni micrófono.'); enSala = false; document.body.classList.remove('en-videollamada'); return; }
+    catch(e2){ alert('No se pudo acceder a la cámara ni al micrófono.'); return; }
   }
-  agregarCajaVideo('local', streamLocal, perfilSeleccionado ? perfilSeleccionado.nombre : 'Tú', true);
+  videoLocal.srcObject = streamLocal;
 
   const miRef = refParticipantes.child(MI_ID);
-  miRef.set({ nombre: perfilSeleccionado ? perfilSeleccionado.nombre : 'Familiar' });
+  miRef.set({ nombre:'Tata' });
   miRef.onDisconnect().remove();
-
-  refLlamada.update({ estado: 'en_llamada' });
 
   refParticipantes.on('child_added', (snap) => {
     const otroId = snap.key;
     if (otroId === MI_ID || conexiones[otroId]) return;
     conectarConPeer(otroId, (snap.val() || {}).nombre || 'Familiar');
   });
-
   refParticipantes.on('child_removed', (snap) => {
-    cerrarConexionPeer(snap.key);
-    verificarAutoCierre();
+    const otroId = snap.key;
+    cerrarConexionPeer(otroId);
   });
-}
-
-async function verificarAutoCierre() {
-  if (!enSala) return;
-  const snap = await refParticipantes.once('value');
-  if (snap.exists() && snap.numChildren() <= 1) {
-    finalizarLlamadaParaTodos();
-  }
-}
-
-function agregarCajaVideo(id, stream, nombre, esLocal){
-  let box = document.getElementById('caja_' + id);
-  if (!box) {
-    box = document.createElement('div');
-    box.className = 'videoBox';
-    box.id = 'caja_' + id;
-    box.innerHTML = `<video id="video_${id}" autoplay playsinline ${esLocal ? 'muted' : ''}></video><div class="etiqueta">${nombre}</div>`;
-    document.getElementById('videoGrid').appendChild(box);
-  }
-  document.getElementById('video_' + id).srcObject = stream;
 }
 
 function conectarConPeer(otroId, nombreOtro){
@@ -544,25 +552,42 @@ function conectarConPeer(otroId, nombreOtro){
   listenersPares[otroId] = [];
 
   streamLocal.getTracks().forEach(track => pc.addTrack(track, streamLocal));
-  pc.ontrack = (event) => agregarCajaVideo(otroId, event.streams[0], nombreOtro, false);
 
-  const refCandPropio = refPares.child(pairKey).child(soyA ? 'candidatosA' : 'candidatosB');
-  pc.onicecandidate = (event) => { if (event.candidate) refCandPropio.push(event.candidate.toJSON()); };
+  pc.ontrack = (event) => {
+    let box = document.getElementById('caja_' + otroId);
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'videoBox';
+      box.id = 'caja_' + otroId;
+      box.innerHTML = `<video id="video_${otroId}" autoplay playsinline></video><div class="etiqueta">${nombreOtro}</div>`;
+      videoGrid.appendChild(box);
+    }
+    document.getElementById('video_' + otroId).srcObject = event.streams[0];
+  };
+
+  const refParPropio = refPares.child(pairKey).child(soyA ? 'candidatosA' : 'candidatosB');
+  pc.onicecandidate = (event) => {
+    if (event.candidate) refParPropio.push(event.candidate.toJSON());
+  };
 
   if (soyA) {
     pc.createOffer().then(offer => {
       pc.setLocalDescription(offer);
-      refPares.child(pairKey).child('oferta').set({ type:offer.type, sdp:offer.sdp });
+      refPares.child(pairKey).child('oferta').set(offer.toJSON ? offer.toJSON() : { type:offer.type, sdp:offer.sdp });
     });
     const refRespuesta = refPares.child(pairKey).child('respuesta');
     const cbRespuesta = refRespuesta.on('value', (snap) => {
       const val = snap.val();
-      if (val && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(val));
+      if (val && !pc.currentRemoteDescription) {
+        pc.setRemoteDescription(new RTCSessionDescription(val));
+      }
     });
     listenersPares[otroId].push([refRespuesta, cbRespuesta]);
 
     const refCandB = refPares.child(pairKey).child('candidatosB');
-    const cbCandB = refCandB.on('child_added', (snap) => pc.addIceCandidate(new RTCIceCandidate(snap.val())).catch(()=>{}));
+    const cbCandB = refCandB.on('child_added', (snap) => {
+      pc.addIceCandidate(new RTCIceCandidate(snap.val())).catch(()=>{});
+    });
     listenersPares[otroId].push([refCandB, cbCandB]);
   } else {
     const refOferta = refPares.child(pairKey).child('oferta');
@@ -578,7 +603,9 @@ function conectarConPeer(otroId, nombreOtro){
     listenersPares[otroId].push([refOferta, cbOferta]);
 
     const refCandA = refPares.child(pairKey).child('candidatosA');
-    const cbCandA = refCandA.on('child_added', (snap) => pc.addIceCandidate(new RTCIceCandidate(snap.val())).catch(()=>{}));
+    const cbCandA = refCandA.on('child_added', (snap) => {
+      pc.addIceCandidate(new RTCIceCandidate(snap.val())).catch(()=>{});
+    });
     listenersPares[otroId].push([refCandA, cbCandA]);
   }
 }
@@ -593,17 +620,43 @@ function cerrarConexionPeer(otroId){
 }
 
 function salirDeLlamada(){
-  if (!enSala) return;
   enSala = false;
-  document.body.classList.remove('en-videollamada');
   refParticipantes.off('child_added');
   refParticipantes.off('child_removed');
   Object.keys(conexiones).forEach(cerrarConexionPeer);
   conexiones = {}; listenersPares = {};
   if (streamLocal) { streamLocal.getTracks().forEach(t => t.stop()); streamLocal = null; }
+  videoLocal.srcObject = null;
   refParticipantes.child(MI_ID).remove();
-  document.getElementById('videoGrid').innerHTML = '';
+  videoGrid.innerHTML = '';
 }
+
+
+/* ============================================================
+   TRANSMISIÓN DE UBICACIÓN GPS A FIREBASE
+   ============================================================ */
+const refUbicacion = db.ref('ubicacion_tata');
+
+function enviarUbicacion() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        refUbicacion.set({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          precision: position.coords.accuracy,
+          ultimaActualizacion: firebase.database.ServerValue.TIMESTAMP
+        });
+      },
+      (error) => console.warn("Error al obtener ubicación:", error),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+}
+
+// Enviar ubicación al cargar y luego cada 5 minutos
+enviarUbicacion();
+setInterval(enviarUbicacion, 300000);
 </script>
 </body>
 </html>
