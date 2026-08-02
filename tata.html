@@ -78,8 +78,7 @@
     animation: pulseFondo 1.4s infinite ease-in-out;
   }
   @keyframes pulseFondo { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.25);} }
-  #avatarLlamador { font-size:14vw; line-height:1; margin-bottom:10px; animation: pulseAvatar 1s infinite ease-in-out; }
-  @keyframes pulseAvatar { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+#avatarLlamadorFoto { width:34vw; height:34vw; border-radius:50%; object-fit:cover; border:4px solid #fff; box-shadow:0 6px 18px rgba(0,0,0,.4); }  @keyframes pulseAvatar { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
   #textoLlamador { font-size:5vw; font-weight:800; margin-bottom:10px; text-shadow:0 4px 10px rgba(0,0,0,.4); }
   #contador { font-size:2vw; opacity:.9; margin-bottom:40px; }
   #botonesLlamada { display:flex; gap:60px; }
@@ -168,7 +167,7 @@
   <div id="pantallaNegra"><span>Toca en cualquier parte para volver</span></div>
 
   <div id="pantallaLlamando">
-    <div id="avatarLlamador">📞</div>
+    <div id="avatarLlamador"><span id="avatarLlamadorEmoji">📞</span><img id="avatarLlamadorFoto" style="display:none;" alt=""></div>
     <div id="textoLlamador">¡TE ESTÁ LLAMANDO...!</div>
     <div id="contador">Se contestará solo en 20 segundos...</div>
     <div id="botonesLlamada">
@@ -409,7 +408,17 @@ refLlamada.on('value', (snapshot) => {
   if (estadoNuevo === 'llamando') {
     document.title = TITULO_LLAMADA;
     salirDePantallaNegra();
-    avatarLlamadorEl.textContent = datos.llamadorFoto || '👤';
+    const emojiEl = document.getElementById('avatarLlamadorEmoji');
+const fotoEl  = document.getElementById('avatarLlamadorFoto');
+if (datos.llamadorFotoUrl) {
+  fotoEl.src = datos.llamadorFotoUrl;
+  fotoEl.style.display = 'block';
+  emojiEl.style.display = 'none';
+} else {
+  emojiEl.textContent = datos.llamadorFoto || '👤';
+  emojiEl.style.display = 'block';
+  fotoEl.style.display = 'none';
+}
     textoLlamadorEl.textContent = `¡TE ESTÁ LLAMANDO ${(datos.llamadorNombre || 'UN FAMILIAR').toUpperCase()}!`;
     mostrarPantalla('llamando');
     if (estadoAnterior !== 'llamando') {
