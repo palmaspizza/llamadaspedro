@@ -286,14 +286,23 @@ function abrirEnlaceExterno(url, nombreVentana){
    Tata usa audífonos Bluetooth ya emparejados de antes; Android los
    reconecta solo con encender el radio, sin abrir nada más). En Facebook
    NO se toca el Bluetooth para nada. Si el Tata no quiere usar audífonos,
-   el botón "Apagar audífonos" siempre está disponible para desconectarlos. */
-function activarAudifonosSiHayPuente(){
-  if (window.AndroidBridge && typeof window.AndroidBridge.activarBluetooth === 'function') {
-    window.AndroidBridge.activarBluetooth();
+   el botón "Apagar audífonos" siempre está disponible para desconectarlos.
+
+   IMPORTANTE: se usa UN SOLO método del puente (abrirConAudifonos) que
+   hace las dos cosas EN ORDEN dentro de Android: primero enciende el
+   Bluetooth (esperando si hace falta que el Tata toque "Permitir"), y
+   RECIÉN DESPUÉS abre YouTube/Spotify. Si se llamaran por separado como
+   antes, abrir la app de inmediato tapaba el aviso de Bluetooth antes de
+   que nadie pudiera tocarlo, y el Bluetooth nunca llegaba a encenderse. */
+function abrirYoutubeOSpotify(url, nombreVentana){
+  if (window.AndroidBridge && typeof window.AndroidBridge.abrirConAudifonos === 'function') {
+    window.AndroidBridge.abrirConAudifonos(url);
+  } else {
+    window.open(url, nombreVentana, FEATURES_VENTANA);
   }
 }
-btnYoutube.addEventListener('click',  () => { activarAudifonosSiHayPuente(); abrirEnlaceExterno(URL_YOUTUBE,  'ventanaYoutube'); });
-btnSpotify.addEventListener('click',  () => { activarAudifonosSiHayPuente(); abrirEnlaceExterno(URL_SPOTIFY,  'ventanaSpotify'); });
+btnYoutube.addEventListener('click',  () => abrirYoutubeOSpotify(URL_YOUTUBE, 'ventanaYoutube'));
+btnSpotify.addEventListener('click',  () => abrirYoutubeOSpotify(URL_SPOTIFY, 'ventanaSpotify'));
 btnFacebook.addEventListener('click', () => abrirEnlaceExterno(URL_FACEBOOK, 'ventanaFacebook'));
 
 btnAudifonosOff.addEventListener('click', () => {
